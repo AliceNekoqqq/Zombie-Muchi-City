@@ -20,7 +20,7 @@ import { installUi, mountInline, refreshInlineSoon } from './ui.js';
       window.__mr87MountTimer=setTimeout(mountInline,140);
     });
     const chat=document.querySelector('#chat');
-    if(chat) observer.observe(chat,{childList:true,subtree:true});
+    if(chat) observer.observe(chat,{childList:true});
 
     window.MuchiRadio={openSettings:()=>document.querySelector('[data-r-action="settings"]')?.click(),mount:mountInline};
   }catch(err){
