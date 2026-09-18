@@ -1,4 +1,4 @@
-export const VERSION='3.0.0';
+export const VERSION='1.0.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -75,10 +75,15 @@ function formatWeather(w){
   return a.join('，')||'未知';
 }
 
+function latestAssistantMessageId(){
+  try{const chat=globalThis.SillyTavern?.chat||[];for(let i=chat.length-1;i>=0;i--)if(chat[i]&&!chat[i].is_user)return i}catch{}
+  return -1;
+}
+
 export async function world(){
-  try{await waitGlobalInitialized?.('Mvu')}catch{}
+  try{await waitGlobalInitialized('Mvu')}catch{}
   let v={};
-  try{v=getVariables?.({type:'message',message_id:'latest'})||{}}catch{}
+  try{v=getAllVariables()||{}}catch{}
   const d=v.stat_data||v||{},w=d.世界||{},r=d.广播||{},map=d.地图?.地点动态||{},q=d.支线||{};
   const tm=splitTime(w.当前时间);
   const location=String(w.当前地点||'地下安全屋');
@@ -221,7 +226,7 @@ async function syncMvu(x){
         r.最近事件=applied.length?(x.worldEvent.summary||applied.join('；')):'无';
       }
       return v;
-    },{type:'message',message_id:'latest'});
+    },{type:'message',message_id:latestAssistantMessageId()});
   }catch(e){console.warn('[MR-87] MVU sync',e)}
   x.appliedImpact=applied;
   x.appliedClue=clueApplied;
