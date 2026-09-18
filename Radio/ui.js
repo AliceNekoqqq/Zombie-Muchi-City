@@ -2,24 +2,22 @@ import { store, channels, latest, byId, displayForMessage, switchChannel, cycle,
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_STYLE='swz-radio-settings-style-v106';
-const STYLE='swz-radio-style-v106';
+const SETTINGS_FRAME='swz-radio-settings-frame-v107';
+const STYLE='swz-radio-style-v107';
 const INLINE_CLASS='swz-mr87-inline';
 
-function resolveHostWindow(){
-  let w=window,best=window;
-  for(let i=0;i<8;i++){
-    try{
-      if(w?.document?.body)best=w;
-      if(!w.parent||w.parent===w)break;
-      void w.parent.document;
-      w=w.parent;
-    }catch(_){break}
-  }
-  return best;
+function resolveTavernDocument(){
+  /* Tavern Helper 脚本在后台 iframe 中运行；官方约定 window.$ 指向酒馆主页面。
+   * 用 jQuery 返回节点的 ownerDocument 定位酒馆页面，不再向 top 逐层猜宿主。 */
+  try{
+    const body=globalThis.$?.('body')?.[0];
+    if(body?.ownerDocument)return body.ownerDocument;
+  }catch(_){}
+  try{if(window.parent?.document?.body)return window.parent.document}catch(_){}
+  return document;
 }
-const RH = resolveHostWindow();
-const RDOC = RH.document;
+const RDOC=resolveTavernDocument();
+const RH=RDOC.defaultView||window.parent||window;
 let forceShow=false,forceBroadcastId='';
 
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
@@ -59,22 +57,35 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(155,214,214,.20)!important;background:rgba(155,214,214,.07)!important;color:#d9eeee!important}
 @media(max-width:720px){#${SETTINGS}.mrs-overlay{padding:0!important}#${SETTINGS} .mrs-panel{width:100vw!important;max-height:100vh!important;height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:56px 42px minmax(0,1fr) 54px!important}#${SETTINGS} .mrs-title{padding-left:13px!important}#${SETTINGS} .mrs-title b{font-size:14px!important}#${SETTINGS} .mrs-title span{font-size:7px!important}#${SETTINGS} .mrs-content{padding:8px!important}#${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}#${SETTINGS} .mrs-engine{grid-template-columns:1fr!important}}
 `; }
-function getSettingsOverlay(){return RDOC.getElementById(SETTINGS)}
+function getSettingsFrame(){return RDOC.getElementById(SETTINGS_FRAME)}
+function getSettingsDoc(){try{return getSettingsFrame()?.contentDocument||null}catch{return null}}
+function getSettingsOverlay(){return getSettingsDoc()?.getElementById(SETTINGS)||null}
 function cleanupLegacySettings(){
-  try{RDOC.querySelectorAll('[id^="swz-radio-settings-host-v"]').forEach(el=>el.remove())}catch{}
+  try{RDOC.getElementById(SETTINGS_FRAME)?.remove()}catch{}
+  try{RDOC.querySelectorAll('[id^="swz-radio-settings-host-v"],[id^="swz-radio-settings-frame-v"]').forEach(el=>el.remove())}catch{}
   try{RDOC.getElementById('swz-radio-settings')?.remove()}catch{}
 }
-function ensureSettingsStyle(){
-  let st=RDOC.getElementById(SETTINGS_STYLE);if(st)return st;
-  st=RDOC.createElement('style');st.id=SETTINGS_STYLE;st.textContent=settingsCss();(RDOC.head||RDOC.documentElement).appendChild(st);return st;
-}
 function ensureSettingsMount(){
-  let r=getSettingsOverlay();if(r)return r;
-  cleanupLegacySettings();ensureSettingsStyle();
-  const box=RDOC.createElement('div');box.innerHTML=settingsHtml();r=box.firstElementChild;
+  const existing=getSettingsOverlay();if(existing)return existing;
+  cleanupLegacySettings();
+  const frame=RDOC.createElement('iframe');
+  frame.id=SETTINGS_FRAME;
+  frame.setAttribute('frameborder','0');
+  frame.setAttribute('title','MR-87 收音机设置');
+  frame.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;border:0!important;margin:0!important;padding:0!important;z-index:2147483647!important;background:transparent!important;display:block!important;';
+  (RDOC.body||RDOC.documentElement).appendChild(frame);
+  const doc=frame.contentDocument;
+  if(!doc)throw Error('设置 iframe 无法访问');
+  doc.open();
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0!important;width:100%!important;height:100%!important;overflow:hidden!important;background:transparent!important}</style><style>${settingsCss()}</style></head><body>${settingsHtml()}</body></html>`);
+  doc.close();
+  const r=doc.getElementById(SETTINGS);
   if(!r)throw Error('设置界面创建失败');
-  (RDOC.body||RDOC.documentElement).appendChild(r);bindSettings();return r;
+  bindSettings();
+  doc.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings()});
+  return r;
 }
+
 
 function getLatestAssistantMessage(){
   const selectors=['#chat .mes[is_user="false"]','#chat .mes:not([is_user="true"])','#chat .mes'];
@@ -196,17 +207,13 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.0.6] 设置界面打开失败',err);
-    try{RDOC.getElementById(SETTINGS)?.remove()}catch{}
+    console.error('[MR-87 v1.0.7] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
   }
 }
-export function closeSettings(){
-  try{RDOC.getElementById(SETTINGS)?.remove()}catch{}
-  cleanupLegacySettings();
-}
+export function closeSettings(){cleanupLegacySettings()}
 
 export function mountInline(force=false){
   RDOC.querySelectorAll(`.${INLINE_CLASS}`).forEach(el=>el.remove());
@@ -240,16 +247,15 @@ function bindSettings(){const r=getSettingsOverlay();if(!r||r.dataset.bound==='1
 export function installUi(){
   try{RDOC.getElementById('swz-radio-style')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v105')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v106')?.remove()}catch{}
   ensureStyle();
   closeSettings();
-  ensureSettingsStyle();
   setRenderer((type,payload)=>{if(type==='error'){const root=RDOC.getElementById(ROOT);if(root){root.querySelector('.mr87-headline').textContent='接收失败';root.querySelector('.mr87-transcript').textContent=String(payload||'未知错误')}}else renderRadio()});
   const api={open:openRadio,openSettings,closeSettings,mount:mountInline};
   try{RH.MuchiRadio={...(RH.MuchiRadio||{}),...api}}catch{}
-  try{if(typeof eventOn==='function'&&typeof getButtonEvent==='function')eventOn(getButtonEvent('打开MR-87'),openRadio)}catch(e){console.warn('[MR-87] 打开按钮绑定失败',e)}
-  try{if(typeof eventOn==='function'&&typeof getButtonEvent==='function')eventOn(getButtonEvent('收音机设置'),openSettings)}catch(e){console.warn('[MR-87] 设置按钮绑定失败',e)}
-  try{if(typeof eventOn==='function')eventOn('swz:open-radio-settings',openSettings)}catch(e){console.warn('[MR-87] 设置事件绑定失败',e)}
-  try{if(typeof eventOn==='function')eventOn('swz:open-radio',openRadio)}catch(e){console.warn('[MR-87] 打开事件绑定失败',e)}
+  /* 酒馆助手脚本库按钮由 v25.8 角色卡脚本本体绑定；远程模块只保留自定义事件入口。 */
+  try{if(typeof globalThis.eventOn==='function')globalThis.eventOn('swz:open-radio-settings',openSettings)}catch(e){console.warn('[MR-87] 设置事件绑定失败',e)}
+  try{if(typeof globalThis.eventOn==='function')globalThis.eventOn('swz:open-radio',openRadio)}catch(e){console.warn('[MR-87] 打开事件绑定失败',e)}
   mountInline();
 }
 export function refreshInlineSoon(){setTimeout(()=>mountInline(),140)}
