@@ -1,5 +1,17 @@
-import { initCore, autoRefresh } from './core.js';
-import { installUi, mountInline, refreshInlineSoon } from './ui.js';
+import { initCore, prepareBeforeGeneration, markStoryMessage } from './core.js';
+import { installUi, mountInline, refreshInlineSoon, openRadio, openSettings, clearForcedView } from './ui.js';
+
+const RH = (()=>{ try { return window.parent && window.parent.document ? window.parent : window; } catch (_) { return window; } })();
+const RDOC = RH.document;
+
+function isUserMessage(id){
+  try{
+    const msg=globalThis.SillyTavern?.chat?.[Number(id)];
+    if(msg)return !!msg.is_user;
+    const el=RDOC.querySelector(`#chat .mes[mesid="${id}"]`);
+    return el?.getAttribute('is_user')==='true'||el?.getAttribute('data-message-role')==='user';
+  }catch{return false}
+}
 
 (async()=>{
   try{
@@ -7,22 +19,24 @@ import { installUi, mountInline, refreshInlineSoon } from './ui.js';
     installUi();
 
     try{
-      if(typeof eventOn==='function' && typeof tavern_events!=='undefined'){
-        if(tavern_events.MESSAGE_RECEIVED) eventOn(tavern_events.MESSAGE_RECEIVED,()=>{refreshInlineSoon();setTimeout(()=>autoRefresh(),850)});
-        if(tavern_events.MESSAGE_EDITED) eventOn(tavern_events.MESSAGE_EDITED,()=>refreshInlineSoon());
-        if(tavern_events.MESSAGE_DELETED) eventOn(tavern_events.MESSAGE_DELETED,()=>refreshInlineSoon());
-        if(tavern_events.CHAT_CHANGED) eventOn(tavern_events.CHAT_CHANGED,()=>setTimeout(mountInline,220));
+      if(typeof eventOn==='function'&&typeof tavern_events!=='undefined'){
+        const before=tavern_events.GENERATION_AFTER_COMMANDS;
+        if(before)eventOn(before,async()=>{await prepareBeforeGeneration()});
+        if(tavern_events.MESSAGE_RECEIVED)eventOn(tavern_events.MESSAGE_RECEIVED,(messageId)=>{
+          if(isUserMessage(messageId))return;
+          markStoryMessage(messageId);clearForcedView();setTimeout(()=>mountInline(),100);
+        });
+        if(tavern_events.MESSAGE_EDITED)eventOn(tavern_events.MESSAGE_EDITED,()=>refreshInlineSoon());
+        if(tavern_events.MESSAGE_DELETED)eventOn(tavern_events.MESSAGE_DELETED,()=>refreshInlineSoon());
+        if(tavern_events.CHAT_CHANGED)eventOn(tavern_events.CHAT_CHANGED,()=>setTimeout(mountInline,220));
       }
     }catch(e){console.warn('[MR-87] event binding',e)}
 
-    const observer=new MutationObserver(()=>{
-      clearTimeout(window.__mr87MountTimer);
-      window.__mr87MountTimer=setTimeout(mountInline,140);
-    });
-    const chat=document.querySelector('#chat');
-    if(chat) observer.observe(chat,{childList:true});
+    const Obs=RH.MutationObserver||MutationObserver;
+    const observer=new Obs(()=>{clearTimeout(RH.__mr87MountTimer);RH.__mr87MountTimer=setTimeout(()=>mountInline(),160)});
+    const chat=RDOC.querySelector('#chat');if(chat)observer.observe(chat,{childList:true,subtree:false});
 
-    window.MuchiRadio={openSettings:()=>document.querySelector('[data-r-action="settings"]')?.click(),mount:mountInline};
+    RH.MuchiRadio={open:openRadio,openSettings,mount:mountInline,prepare:prepareBeforeGeneration};
   }catch(err){
     console.error('[MR-87] init failed',err);
     try{toastr?.error?.(`MR-87 初始化失败：${err?.message||err}`)}catch{}
