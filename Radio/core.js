@@ -1,4 +1,4 @@
-export const VERSION='1.0.0';
+export const VERSION='1.0.1';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -138,7 +138,7 @@ function userPrompt(k,w){
 side_clue通常为“无”；只有消息自然构成失散同伴的模糊冗余线索时才填写，且不能直接确认最终位置。
 近期内容，避免机械重复：\n${store.settings.repeatGuard?recent(k):'无需重复保护。'}${localExtra}
 附加偏好：${store.settings.extra||'无'}
-只输出结构化数据。`;
+只输出一个JSON对象，不要代码块、不要前后说明、不要思维过程。字段必须完整；如果无法提供world_event或side_clue，也必须按结构返回triggered=false与target="无"。`;
 }
 
 const schema={name:'muchi_radio_v3',strict:true,value:{type:'object',properties:{
@@ -156,10 +156,51 @@ function config(k,w){
   return c;
 }
 
-function parse(x){
-  const t=typeof x==='string'?x:(x?.content||JSON.stringify(x)),clean=t.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
-  try{return JSON.parse(clean)}catch{}
-  const m=clean.match(/\{[\s\S]*\}/);if(!m)throw Error('模型未返回JSON');return JSON.parse(m[0]);
+function responseText(x){
+  if(typeof x==='string')return x;
+  if(x&&typeof x.content==='string')return x.content;
+  try{return JSON.stringify(x??'')}catch{return String(x??'')}
+}
+function balancedObjects(text){
+  const out=[];let start=-1,depth=0,quote='',escape=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(start<0){if(c==='{'){start=i;depth=1}continue}
+    if(quote){if(escape){escape=false;continue}if(c==='\\'){escape=true;continue}if(c===quote)quote='';continue}
+    if(c==='"'||c==="'"){quote=c;continue}
+    if(c==='{')depth++;
+    else if(c==='}'&&--depth===0){out.push(text.slice(start,i+1));start=-1}
+  }
+  return out;
+}
+function parseJsonCandidate(text){
+  const raw=String(text||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
+  const fenced=[...raw.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)].map(x=>x[1].trim());
+  const clean=raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+  const candidates=[clean,...fenced,...balancedObjects(clean)].filter(Boolean).reverse();
+  for(const candidate of candidates){
+    try{return JSON.parse(candidate)}catch{}
+    try{return JSON.parse(candidate.replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/,\s*([}\]])/g,'$1'))}catch{}
+  }
+  return null;
+}
+function fallbackBroadcast(text,k,w){
+  const plain=String(text||'').replace(/<think>[\s\S]*?<\/think>/gi,'').replace(/```[a-z]*|```/gi,'').trim();
+  if(!plain)throw Error('模型没有返回可用内容');
+  const oneLine=plain.replace(/\s+/g,' ').trim();
+  const first=(oneLine.match(/^.{1,36}?[。！？!?]/)?.[0]||oneLine.slice(0,32)||'广播更新').trim();
+  return{
+    event_time:stamp(w),source:`${channels[k].label}公共广播`,signal:'一般',category:'广播',headline:first.replace(/[。！？!?]+$/,''),
+    summary:oneLine.slice(0,90),transcript:plain.slice(0,900),certainty:'未结构化播报',
+    world_event:{triggered:false,event_type:'无',summary:'',locations:[]},
+    side_clue:{target:'无',name:'',summary:'',strength:'无',region_hint:''}
+  };
+}
+function parse(x,k,w){
+  const text=responseText(x),parsed=parseJsonCandidate(text);
+  if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))return parsed;
+  console.warn('[MR-87] 模型未按JSON返回，已降级为普通广播文本',text);
+  return fallbackBroadcast(text,k,w);
 }
 
 function normalizeWorldEvent(raw,k){
@@ -237,7 +278,7 @@ export async function generate(k=store.state.channel,reason='manual'){
   if(busy)return null;
   busy=true;render('busy',true);noise(.28);
   try{
-    const w=await world(),raw=parse(await generateRaw(config(k,w)));
+    const w=await world(),raw=parse(await generateRaw(config(k,w)),k,w);
     const x={
       id:`r${Date.now()}`,channel:k,eventTime:String(raw.event_time||stamp(w)),source:String(raw.source||channels[k].label),
       signal:['强','一般','微弱','断续'].includes(raw.signal)?raw.signal:'一般',category:String(raw.category||'其他'),
