@@ -1,7 +1,14 @@
 import { initCore, prepareBeforeGeneration, markStoryMessage } from './core.js';
 import { installUi, mountInline, refreshInlineSoon, openRadio, openSettings, clearForcedView } from './ui.js';
 
-const RH = (()=>{ try { return window.parent && window.parent.document ? window.parent : window; } catch (_) { return window; } })();
+function resolveHostWindow(){
+  let w=window,best=window;
+  for(let i=0;i<8;i++){
+    try{if(w?.document?.body)best=w;if(!w.parent||w.parent===w)break;void w.parent.document;w=w.parent}catch(_){break}
+  }
+  return best;
+}
+const RH = resolveHostWindow();
 const RDOC = RH.document;
 
 function isUserMessage(id){
@@ -36,7 +43,7 @@ function isUserMessage(id){
     const observer=new Obs(()=>{clearTimeout(RH.__mr87MountTimer);RH.__mr87MountTimer=setTimeout(()=>mountInline(),160)});
     const chat=RDOC.querySelector('#chat');if(chat)observer.observe(chat,{childList:true,subtree:false});
 
-    RH.MuchiRadio={open:openRadio,openSettings,mount:mountInline,prepare:prepareBeforeGeneration};
+    RH.MuchiRadio={...(RH.MuchiRadio||{}),open:openRadio,openSettings,mount:mountInline,prepare:prepareBeforeGeneration};
   }catch(err){
     console.error('[MR-87] init failed',err);
     try{toastr?.error?.(`MR-87 初始化失败：${err?.message||err}`)}catch{}
