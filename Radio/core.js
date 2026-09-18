@@ -1,4 +1,4 @@
-export const VERSION='1.0.1';
+export const VERSION='1.0.2';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
