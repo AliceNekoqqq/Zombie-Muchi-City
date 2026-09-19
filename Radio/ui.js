@@ -1,9 +1,9 @@
-import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, clearHistory, clickSound, noise, testConnection, save, setApiKey, getApiKey, setRenderer, isBusy, getProxyPresets, fetchModelList, generationCapabilities } from './core.js';
+import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, getProxyPresets, fetchModelList, generationCapabilities } from './core.js';
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v110';
-const STYLE='swz-radio-style-v110';
+const SETTINGS_FRAME='swz-radio-settings-frame-v140';
+const STYLE='swz-radio-style-v140';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -19,6 +19,7 @@ function resolveTavernDocument(){
 const RDOC=resolveTavernDocument();
 const RH=RDOC.defaultView||window.parent||window;
 let forceShow=false,forceBroadcastId='';
+let modelCache=[],modelCacheUrl='';
 
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -26,11 +27,12 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function styleUrl(){return new URL('./style.css',import.meta.url).href;}
 function ensureStyle(){if(RDOC.getElementById(STYLE))return;const link=RDOC.createElement('link');link.id=STYLE;link.rel='stylesheet';link.href=styleUrl();RDOC.head.appendChild(link)}
 function settingsCss(){return `
-#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:12px!important;overflow:auto!important;background:rgba(5,8,10,.94)!important;color:#dfe8e7!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important}
+#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:12px!important;overflow:auto!important;background:rgba(5,8,10,.86)!important;color:#dfe8e7!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important}
 #${SETTINGS}.mrs-overlay.mrs-open{display:flex!important}
 #${SETTINGS},#${SETTINGS} *{box-sizing:border-box!important}
-#${SETTINGS} .mrs-panel{position:relative!important;width:min(920px,calc(100vw - 24px))!important;max-height:calc(100vh - 24px)!important;display:grid!important;grid-template-rows:58px 42px minmax(0,1fr) 54px!important;overflow:hidden!important;border:1px solid rgba(154,184,187,.16)!important;border-radius:18px!important;background:#0d1316!important;color:#dfe8e7!important;box-shadow:0 24px 60px rgba(0,0,0,.42)!important}
-#${SETTINGS} .mrs-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 14px 0 18px!important;border-bottom:1px solid rgba(154,184,187,.10)!important;background:#10171a!important}
+#${SETTINGS} .mrs-panel{position:relative!important;width:min(760px,calc(100vw - 40px))!important;max-height:calc(100vh - 40px)!important;display:grid!important;grid-template-rows:58px 42px minmax(0,1fr) 54px!important;overflow:hidden!important;border:1px solid rgba(154,184,187,.16)!important;border-radius:18px!important;background:#0d1316!important;color:#dfe8e7!important;box-shadow:0 24px 60px rgba(0,0,0,.42)!important}
+#${SETTINGS} .mrs-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 14px 0 18px!important;border-bottom:1px solid rgba(154,184,187,.10)!important;background:#10171a!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important}
+#${SETTINGS}.mrs-dragging .mrs-title{cursor:grabbing!important}
 #${SETTINGS} .mrs-title b{font-family:"Noto Serif SC","Songti SC",serif!important;font-size:16px!important;letter-spacing:.08em!important;color:#dfe8e7!important}
 #${SETTINGS} .mrs-title span{display:block!important;margin-top:3px!important;color:#687a7e!important;font-size:8px!important}
 #${SETTINGS} .mrs-close{appearance:none!important;width:36px!important;height:36px!important;padding:0!important;border:1px solid rgba(154,184,187,.14)!important;border-radius:9px!important;background:#151d20!important;color:#cbd7d6!important;font-size:19px!important;line-height:34px!important;text-align:center!important;cursor:pointer!important}
@@ -75,9 +77,13 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-status{min-height:16px!important;margin-top:6px!important;color:#667b7f!important;font-size:7px!important;line-height:1.5!important}
 #${SETTINGS} .mrs-status.ok{color:#8fb9ad!important}
 #${SETTINGS} .mrs-status.warn{color:#bba77c!important}
-#${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:8px!important}
+#${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin-top:8px!important}
+#${SETTINGS} .mrs-model-pick-row select{cursor:pointer!important}
 #${SETTINGS} .mrs-hidden{display:none!important}
 #${SETTINGS} .mrs-badge{display:inline-flex!important;align-items:center!important;min-height:20px!important;padding:2px 7px!important;border:1px solid rgba(154,184,187,.10)!important;border-radius:999px!important;background:#0a1012!important;color:#7d9093!important;font-size:7px!important}
+#${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;margin-left:5px!important;border:1px solid rgba(154,184,187,.16)!important;border-radius:50%!important;background:#0a1012!important;color:#8fa6aa!important;font-size:8px!important;font-style:normal!important;cursor:help!important;vertical-align:middle!important;outline:none!important}
+#${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:30!important;left:50%!important;bottom:calc(100% + 8px)!important;width:220px!important;max-width:70vw!important;padding:8px 9px!important;border:1px solid rgba(154,184,187,.14)!important;border-radius:8px!important;background:#080d0f!important;color:#b9c8c7!important;font-size:8px!important;line-height:1.55!important;box-shadow:0 10px 28px rgba(0,0,0,.32)!important;transform:translate(-50%,4px)!important;opacity:0!important;pointer-events:none!important;transition:.14s ease!important;white-space:normal!important}
+#${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:translate(-50%,0)!important}
 @media(max-width:720px){#${SETTINGS}.mrs-overlay{padding:0!important}#${SETTINGS} .mrs-panel{width:100vw!important;max-height:100vh!important;height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:56px 42px minmax(0,1fr) 54px!important}#${SETTINGS} .mrs-title{padding-left:13px!important}#${SETTINGS} .mrs-title b{font-size:14px!important}#${SETTINGS} .mrs-title span{font-size:7px!important}#${SETTINGS} .mrs-content{padding:8px!important}#${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}#${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine .mrs-wide{grid-column:auto!important}#${SETTINGS} .mrs-sampling-fields{grid-template-columns:1fr!important}}
 `; }
 function getSettingsFrame(){return RDOC.getElementById(SETTINGS_FRAME)}
@@ -143,6 +149,7 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
         </div>
         <div class="mr87-presets"><button data-r-channel="global">SW · 全球</button><button data-r-channel="china">SW · 中国</button><button data-r-channel="muchi">FM · 暮迟市</button></div>
         <div class="mr87-controls"><div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调频</small></div><div class="mr87-keys"><button data-r-action="prev">◀</button><button data-r-action="scan">扫频</button><button data-r-action="next">▶</button><button class="mr87-receive" data-r-action="receive">接收新播报</button></div><div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 · <span class="mr87-volume-num">48</span></small></div></div>
+        <div class="mr87-intel-tools"><div class="mr87-intel-state"><span>地图情报</span><b data-r-intel-status>今日未结算</b></div><div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div></div>
         <div class="mr87-funcs"><button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button><button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button><button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button><button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button><button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button><button class="mr87-utility" data-r-action="collapse"><span>↘</span><em>收起</em></button></div>
       </div>
     </div>
@@ -156,12 +163,12 @@ function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-h
   <nav class="mrs-tabs"><button type="button" data-s-tab="general" class="active">常规</button><button type="button" data-s-tab="engine">生成 API</button><button type="button" data-s-tab="auto">自动</button><button type="button" data-s-tab="story">剧情</button><button type="button" data-s-tab="display">显示</button></nav>
   <div class="mrs-content">
     <div class="mrs-page active" data-s-page="general">
-      <section class="mrs-card"><h3>内容控制</h3><label>民间信息倾向 <em data-s-value="civilian">28%</em><input name="civilian" type="range" min="0" max="100"></label><label>整体紧张度<select name="tension"><option value="calm">生活化 / 克制</option><option value="balanced">平衡</option><option value="tense">偏紧张</option></select></label><label class="mrs-check"><input name="repeatGuard" type="checkbox">近期广播重复保护</label><label>附加偏好<textarea name="extra"></textarea></label></section>
+      <section class="mrs-card"><h3>内容控制 <i class="mrs-help" tabindex="0" data-tip="随机性由脚本先抽取事件类型、区域、稀有度、播报形式、可靠度、人味插播和连续事件，再交给模型写成广播；不是单纯提高温度。">?</i></h3><label>广播多样性<select name="diversity"><option value="steady">稳健 · 更多连续性，稀有事件很少</option><option value="natural">自然 · 推荐</option><option value="rich">丰富 · 更积极换事件与形式</option><option value="chaotic">混乱 · 更多传闻与非常规频段</option></select></label><label>人味插播概率 <em data-s-value="civilian">34%</em><input name="civilian" type="range" min="0" max="80"></label><label class="mrs-check"><input name="songRequests" type="checkbox">允许幸存者点歌 / 留言 <i class="mrs-help" tabindex="0" data-tip="点歌会随机出现歌名、歌手、点播对象和留言，也可能使用虚构歌曲；它属于生活内容，不会单独改变地图情报。">?</i></label><label class="mrs-check"><input name="storyArcs" type="checkbox">允许连续事件弧 <i class="mrs-help" tabindex="0" data-tip="部分广播会在未来1—3个游戏日继续发展，例如车队失联、供电恢复、寻宠后续；不会保证每次都续写。">?</i></label><label>整体紧张度<select name="tension"><option value="calm">生活化 / 克制</option><option value="balanced">平衡</option><option value="tense">偏紧张</option></select></label><label class="mrs-check"><input name="repeatGuard" type="checkbox">近期广播重复保护</label><label>附加偏好<textarea name="extra"></textarea></label></section>
       <section class="mrs-card"><h3>记录与同步</h3><label>历史保留条数<input name="historyLimit" type="number" min="10" max="200"></label><label class="mrs-check"><input name="syncMvu" type="checkbox">最新摘要同步回 MVU</label><p>完整历史保存在脚本变量；MVU只保留三个频道的最新摘要与最近世界事件。</p></section>
     </div>
     <div class="mrs-page" data-s-page="engine">
       <section class="mrs-card mrs-full">
-        <h3>生成来源</h3>
+        <h3>生成来源 <i class="mrs-help" tabindex="0" data-tip="主预设直接跟随酒馆；代理预设使用酒馆已保存的代理连接；独立 API 只给 MR-87 使用，不改变正文模型。">?</i></h3>
         <div class="mrs-mode-grid">
           <label class="mrs-mode-option"><input type="radio" name="mode" value="main"><span><b>主预设</b><small>完全跟随当前酒馆连接与模型。最省心。</small></span></label>
           <label class="mrs-mode-option"><input type="radio" name="mode" value="proxy"><span><b>代理预设</b><small>使用酒馆中已保存的代理预设，不暴露 URL / Key。</small></span></label>
@@ -182,33 +189,26 @@ function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-h
             <label>API URL<input name="apiUrl" placeholder="https://api.example.com/v1"></label>
             <label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="不会发送给主剧情"></label>
             <label class="mrs-check"><input name="rememberKey" type="checkbox">在本角色脚本变量中保存 Key</label>
-            <div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" list="mrs-model-options" placeholder="手填或拉取模型"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div>
-            <datalist id="mrs-model-options"></datalist>
-            <div class="mrs-status mrs-wide" data-model-status>拉取模型使用酒馆助手 getModelList；接口不支持时仍可手动填写。</div>
+            <div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" placeholder="手填模型，或先拉取列表"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div>
+            <label class="mrs-wide mrs-model-pick-row mrs-hidden" data-model-pick-row>已拉取模型<select name="modelPick"><option value="">选择模型…</option></select></label>
+            <div class="mrs-status mrs-wide" data-model-status>拉取成功后会出现可下拉选择的模型列表；也可以直接手填。</div>
           </div>
         </div>
       </section>
-      <section class="mrs-card">
+      <section class="mrs-card mrs-full">
         <h3>采样参数</h3>
         <label class="mrs-check"><input name="inheritSampling" type="checkbox"><span data-sampling-label>沿用来源采样参数</span></label>
         <div class="mrs-sampling-fields" data-sampling-fields>
-          <label>温度 <em data-s-value="temperature">0.72</em><input name="temperature" type="range" min="0" max="1.5" step="0.01"></label>
-          <label>最大输出 Tokens<input name="maxTokens" type="number" min="256" max="1600" step="32"></label>
+          <label>温度 <em data-s-value="temperature">0.85</em><input name="temperature" type="range" min="0" max="1.5" step="0.01"></label>
         </div>
         <p data-sampling-help></p>
       </section>
-      <section class="mrs-card">
-        <h3>连接状态</h3>
-        <div class="mrs-source-note"><strong data-source-summary>主预设</strong><span data-source-detail>跟随酒馆当前 API。</span></div>
-        <div class="mrs-actions"><button data-s-action="test">测试当前生成来源</button></div>
-        <p>测试只请求“RADIO_OK”，不会写入广播历史，也不会影响剧情。</p>
-      </section>
     </div>
     <div class="mrs-page" data-s-page="auto">
-      <section class="mrs-card mrs-full"><h3>自动接收</h3><label class="mrs-check"><input name="auto" type="checkbox">开启自动广播</label><label class="mrs-check"><input name="initialBroadcast" type="checkbox">首次生成前接收本地广播</label><label>世界时间至少经过（小时）<input name="hours" type="number" min="1" max="48"></label><label class="mrs-check"><input name="dateRefresh" type="checkbox">跨日期刷新</label><label class="mrs-check"><input name="locationRefresh" type="checkbox">换地点后优先刷新本地台</label><label>自动频道<select name="autoChannel"><option value="context">按情境选择</option><option value="current">只刷新当前频道</option><option value="rotate">三频道轮换</option></select></label></section>
+      <section class="mrs-card mrs-full"><h3>自动接收 <i class="mrs-help" tabindex="0" data-tip="满足首次、跨日期、换地点或经过指定时间等条件时自动接收；同一轮需要多个频道会合并为一次 API 请求。">?</i></h3><label class="mrs-check"><input name="auto" type="checkbox">开启自动广播</label><label class="mrs-check"><input name="initialBroadcast" type="checkbox">首次生成前接收本地广播</label><label>世界时间至少经过（小时）<input name="hours" type="number" min="1" max="48"></label><label class="mrs-check"><input name="dateRefresh" type="checkbox">跨日期刷新</label><label class="mrs-check"><input name="locationRefresh" type="checkbox">换地点后优先刷新本地台</label><label>自动频道<select name="autoChannel"><option value="context">按情境选择</option><option value="current">只刷新当前频道</option><option value="rotate">三频道轮换</option></select></label></section>
     </div>
     <div class="mrs-page" data-s-page="story">
-      <section class="mrs-card mrs-full"><h3>剧情联动</h3><label class="mrs-check"><input name="injectStory" type="checkbox">广播先生成并注入本轮正文上下文</label><label class="mrs-check"><input name="applyEvents" type="checkbox">可信本地事件可更新地图态势</label><label class="mrs-check"><input name="syncClues" type="checkbox">允许广播成为富余支线线索</label><p>广播不会直接确认同伴最终位置，也不会泄露楚泽暗线。</p></section>
+      <section class="mrs-card mrs-full"><h3>剧情联动</h3><label class="mrs-check"><input name="injectStory" type="checkbox">广播先生成并注入本轮正文上下文 <i class="mrs-help" tabindex="0" data-tip="把刚收到的广播摘要一次性注入下一轮正文，使人物能自然听见；不会把整段广播反复塞进上下文。">?</i></label><label class="mrs-check"><input name="applyEvents" type="checkbox">暮迟市广播联动地图情报 <i class="mrs-help" tabindex="0" data-tip="地图显示的是玩家已知情报。每天最多自动结算一次，最多尝试两次；结算后普通广播只生成文本，除非主动重Roll。">?</i></label><label class="mrs-check"><input name="syncClues" type="checkbox">允许广播成为富余支线线索</label><p>广播不会直接确认同伴最终位置，也不会泄露楚泽暗线。地图情报与真实地点机制分层：重Roll只覆盖情报，不逆转正文里已经发生的搜刮、清剿等事实。</p></section>
     </div>
     <div class="mrs-page" data-s-page="display">
       <section class="mrs-card mrs-full"><h3>设备显示</h3><label class="mrs-check"><input name="sound" type="checkbox">按键与调频音效</label><label>静电强度 <em data-s-value="static">32%</em><input name="static" type="range" min="0" max="100"></label><label>设备缩放 <em data-s-value="scale">100%</em><input name="scale" type="range" min="80" max="120"></label><label class="mrs-check"><input name="inline" type="checkbox">在最新角色回复顶部显示广播</label><label class="mrs-check"><input name="showIdle" type="checkbox">没有新广播时也保留入口</label></section>
@@ -242,6 +242,9 @@ function renderRadio(preferred){
   root.querySelector('.mr87-volume-num').textContent=Math.round(store.state.volume);root.querySelector('.mr87-volume')?.style.setProperty('--rot',`${-135+(store.state.volume/100)*270}deg`);
   root.querySelectorAll('[data-r-channel]').forEach(b=>b.classList.toggle('active',b.dataset.rChannel===store.state.channel));
   const receive=root.querySelector('[data-r-action="receive"]');if(receive){receive.disabled=isBusy();receive.textContent=isBusy()?'接收中…':'接收新播报'}
+  const intel=getIntelUiState(),intelText=intel.status==='settled'?`第${intel.day||'?'}日已结算${intel.rerolls?` · 重Roll ${intel.rerolls}`:''}`:intel.status==='no_intel'?`第${intel.day||'?'}日待二次情报`:intel.status==='exhausted'?`第${intel.day||'?'}日无有效情报`:'今日未结算';
+  const intelStatus=root.querySelector('[data-r-intel-status]');if(intelStatus)intelStatus.textContent=intelText;
+  const reroll=root.querySelector('[data-r-action="reroll"]');if(reroll){reroll.disabled=isBusy()||!canRerollToday();reroll.textContent=isBusy()?'处理中…':'重Roll今日情报'}
   const impact=root.querySelector('.mr87-impact');
   if(!item){
     root.querySelector('.mr87-brief-headline').textContent='等待接收';root.querySelector('.mr87-brief-summary').textContent='当前没有新的广播。';root.querySelector('.mr87-brief-time').textContent='--:--';root.querySelector('.mr87-brief-signal').textContent='▮▯▯▯';
@@ -303,7 +306,7 @@ function applySamplingUi(r,mode){
   const inherit=!!r.querySelector('[name="inheritSampling"]')?.checked,fields=r.querySelector('[data-sampling-fields]'),label=r.querySelector('[data-sampling-label]'),help=r.querySelector('[data-sampling-help]');
   fields?.classList.toggle('mrs-hidden',inherit);
   if(label)label.textContent=mode==='proxy'?'沿用代理预设采样参数':mode==='custom'?'沿用酒馆当前采样参数':'沿用酒馆主预设采样参数';
-  if(help)help.textContent=inherit?(mode==='custom'?'独立 API 仍会使用当前酒馆预设的温度与输出长度。':'不额外覆盖温度与输出长度。'):'仅 MR-87 使用下方参数，不改变主剧情设置。';
+  if(help)help.textContent=inherit?(mode==='custom'?'独立 API 沿用酒馆当前温度；不人为设置输出 Tokens 上限。':'不额外覆盖温度，也不人为设置输出 Tokens 上限。'):'仅 MR-87 使用下方温度；输出 Tokens 上限不再由脚本限制。';
 }
 function applyModeUi(r,mode,{loadSampling=true}={}){
   if(r.dataset.activeMode&&r.dataset.activeMode!==mode)stashSamplingState(r);
@@ -314,22 +317,29 @@ function applyModeUi(r,mode,{loadSampling=true}={}){
   applySamplingUi(r,mode);
   const proxyOverride=!!r.querySelector('[name="proxyModelOverride"]')?.checked;
   r.querySelector('[data-proxy-model-row]')?.classList.toggle('mrs-hidden',!proxyOverride);
-  const summary=r.querySelector('[data-source-summary]'),detail=r.querySelector('[data-source-detail]'),test=r.querySelector('[data-s-action="test"]');
-  if(mode==='main'){if(summary)summary.textContent='主预设';if(detail)detail.textContent='当前酒馆 API、模型与预设直接复用。';if(test)test.textContent='测试主预设'}
-  if(mode==='proxy'){refreshProxyPresetOptions(r);if(summary)summary.textContent='代理预设';if(detail)detail.textContent='使用酒馆保存的代理地址和 Key，可选覆盖模型。';if(test)test.textContent='测试代理预设'}
-  if(mode==='custom'){maybeAutofillUrl(r);if(summary)summary.textContent='独立 API';if(detail)detail.textContent='仅 MR-87 使用当前独立连接。';if(test)test.textContent='测试独立 API'}
+  if(mode==='proxy')refreshProxyPresetOptions(r);
+  if(mode==='custom')maybeAutofillUrl(r);
 }
 
+function renderModelPicker(r,models=modelCache){
+  const row=r.querySelector('[data-model-pick-row]'),sel=r.querySelector('[name="modelPick"]'),input=r.querySelector('[name="customModel"]');
+  if(!row||!sel)return;
+  sel.innerHTML='<option value="">选择模型…</option>';
+  for(const m of models||[]){const o=r.ownerDocument.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o)}
+  const current=String(input?.value||'').trim();if(current&&(models||[]).includes(current))sel.value=current;
+  row.classList.toggle('mrs-hidden',!(models&&models.length));
+}
+function clearModelPicker(r){modelCache=[];modelCacheUrl='';renderModelPicker(r,[])}
 async function fetchModelsIntoUi(r,button){
-  const url=String(r.querySelector('[name="apiUrl"]')?.value||'').trim(),key=String(r.querySelector('[name="apiKey"]')?.value||''),status=r.querySelector('[data-model-status]'),list=r.querySelector('#mrs-model-options'),input=r.querySelector('[name="customModel"]');
+  const url=String(r.querySelector('[name="apiUrl"]')?.value||'').trim(),key=String(r.querySelector('[name="apiKey"]')?.value||''),status=r.querySelector('[data-model-status]'),input=r.querySelector('[name="customModel"]');
   if(!url){try{RH.toastr?.warning?.('请先填写 API URL')}catch{};return}
   const old=button.textContent;button.disabled=true;button.textContent='拉取中…';if(status){status.textContent='正在请求模型列表…';status.className='mrs-status'}
   try{
-    const models=await fetchModelList(url,key);list.innerHTML='';for(const m of models){const o=r.ownerDocument.createElement('option');o.value=m;list.appendChild(o)}
-    if(input&&!input.value&&models.length===1)input.value=models[0];
-    if(status){status.textContent=`已载入 ${models.length} 个模型；模型框可搜索或继续手填。`;status.className='mrs-status ok'}
+    const models=await fetchModelList(url,key);modelCache=[...models];modelCacheUrl=url;renderModelPicker(r,models);
+    if(input&&!input.value&&models.length===1){input.value=models[0];const sel=r.querySelector('[name="modelPick"]');if(sel)sel.value=models[0]}
+    if(status){status.textContent=`已载入 ${models.length} 个模型；请从下方列表选择，或继续手填。`;status.className='mrs-status ok'}
     try{RH.toastr?.success?.(`已拉取 ${models.length} 个模型`)}catch{}
-  }catch(err){if(status){status.textContent=`拉取失败：${err?.message||err}。仍可手动填写模型。`;status.className='mrs-status warn'};try{RH.toastr?.error?.(`模型拉取失败：${err?.message||err}`)}catch{}}
+  }catch(err){clearModelPicker(r);if(status){status.textContent=`拉取失败：${err?.message||err}。仍可手动填写模型。`;status.className='mrs-status warn'};try{RH.toastr?.error?.(`模型拉取失败：${err?.message||err}`)}catch{}}
   finally{button.disabled=false;button.textContent=old}
 }
 
@@ -337,19 +347,20 @@ function renderSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;const s=store.settings;
   const set=(name,v)=>{const e=r.querySelector(`[name="${name}"]`);if(!e)return;if(e.type==='checkbox')e.checked=!!v;else e.value=v??''};
   r.querySelectorAll('input[name="mode"]').forEach(e=>e.checked=e.value===(s.mode||'main'));
-  ['proxyPreset','proxyModel','apiUrl','source','temperature','maxTokens','hours','autoChannel','historyLimit','civilian','tension','extra','static','scale'].forEach(n=>set(n,s[n]));
+  ['proxyPreset','proxyModel','apiUrl','source','temperature','hours','autoChannel','historyLimit','civilian','diversity','tension','extra','static','scale'].forEach(n=>set(n,s[n]));
   set('apiKey',getApiKey());set('customModel',s.customModel||s.model||'');set('proxyModelOverride',!!s.proxyModelOverride);
-  ['rememberKey','auto','initialBroadcast','dateRefresh','locationRefresh','injectStory','applyEvents','syncClues','syncMvu','repeatGuard','sound','inline','showIdle'].forEach(n=>set(n,s[n]));
+  ['rememberKey','auto','initialBroadcast','dateRefresh','locationRefresh','injectStory','applyEvents','syncClues','syncMvu','repeatGuard','songRequests','storyArcs','sound','inline','showIdle'].forEach(n=>set(n,s[n]));
   r.dataset.mainSampling=s.mainSampling||'inherit';r.dataset.proxySampling=s.proxySampling||'inherit';r.dataset.customSampling=s.customSampling||'custom';
   r.querySelector('[data-s-value="temperature"]').textContent=Number(s.temperature).toFixed(2);r.querySelector('[data-s-value="civilian"]').textContent=`${s.civilian}%`;r.querySelector('[data-s-value="static"]').textContent=`${s.static}%`;r.querySelector('[data-s-value="scale"]').textContent=`${s.scale}%`;
   const url=r.querySelector('[name="apiUrl"]');if(url)url.dataset.autoUrl=Object.values(API_DEFAULTS).includes(String(url.value||''))?'1':'0';
+  if(modelCache.length&&modelCacheUrl===String(s.apiUrl||''))renderModelPicker(r,modelCache);else renderModelPicker(r,[]);
   applyModeUi(r,s.mode||'main');
 }
 function readSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;stashSamplingState(r);const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
   store.settings.mode=selectedMode(r);store.settings.proxyPreset=v('proxyPreset');store.settings.proxyModelOverride=c('proxyModelOverride');store.settings.proxyModel=v('proxyModel').trim();store.settings.apiUrl=v('apiUrl').trim();setApiKey(v('apiKey'));store.settings.rememberKey=c('rememberKey');store.settings.customModel=v('customModel').trim();store.settings.model=store.settings.mode==='custom'?store.settings.customModel:store.settings.proxyModel;store.settings.source=v('source')||'openai';
-  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.maxTokens=clamp(v('maxTokens'),256,1600);
-  store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,100);store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
+  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=140;
+  store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,80);store.settings.diversity=['steady','natural','rich','chaotic'].includes(v('diversity'))?v('diversity'):'natural';store.settings.songRequests=c('songRequests');store.settings.storyArcs=c('storyArcs');store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
   if(store.settings.mode==='custom'){if(!store.settings.apiUrl)throw Error('独立 API 需要填写 API URL');if(!store.settings.customModel)throw Error('独立 API 需要选择或填写模型')}
   if(store.settings.mode==='proxy'&&!store.settings.proxyPreset)throw Error('代理预设模式需要选择一个代理预设');
   if(store.settings.mode==='proxy'&&store.settings.proxyModelOverride&&!store.settings.proxyModel)throw Error('已开启模型覆盖，请填写模型名');
@@ -369,7 +380,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.1.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.4.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
@@ -393,32 +404,46 @@ function bindInline(root){
   root.addEventListener('click',async e=>{
     const ch=e.target.closest('[data-r-channel]');if(ch){switchChannel(ch.dataset.rChannel);const x=latest(ch.dataset.rChannel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}
     const row=e.target.closest('[data-log-index]');if(row){const x=store.history[Number(row.dataset.logIndex)];if(!x)return;store.state.channel=x.channel;save();root.dataset.broadcastId=x.id;forceBroadcastId=x.id;renderRadio(x);root.classList.remove('log-open');return}
+    const help=e.target.closest('[data-help]');if(help){e.preventDefault();e.stopPropagation();help.focus();return}
     const b=e.target.closest('[data-r-action]');if(!b)return;const a=b.dataset.rAction;
     if(a==='toggle'){root.classList.toggle('expanded');clickSound();renderRadio();return}if(a==='collapse'){root.classList.remove('expanded');renderRadio();return}if(a==='settings'){openSettings();return}
     if(a==='prev'){cycle(-1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}if(a==='next'){cycle(1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}
     if(a==='scan'){noise(.4);root.classList.add('scanning');setTimeout(()=>{cycle(1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';root.classList.remove('scanning');renderRadio(x||undefined)},520);return}
     if(a==='receive'){if(store.state.power){const x=await generate(store.state.channel,'manual');if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
+    if(a==='reroll'){if(store.state.power){const x=await rerollTodayIntel();if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
     if(a==='power'){store.state.power=!store.state.power;clickSound();save();renderRadio();return}if(a==='mute'){store.state.mute=!store.state.mute;save();renderRadio();return}if(a==='light'){store.state.light=!store.state.light;clickSound();save();renderRadio();return}if(a==='hold'){store.state.hold=!store.state.hold;clickSound();save();renderRadio();return}if(a==='log'){root.classList.toggle('log-open');clickSound();return}if(a==='tune'){noise(.08);b.style.setProperty('--rot',`${Math.round(Math.random()*90-45)}deg`);return}if(a==='volume'){store.state.volume=store.state.volume>=90?20:store.state.volume+10;save();renderRadio();clickSound();return}
   });
   root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('mr87-brief')){e.preventDefault();root.classList.toggle('expanded');renderRadio()}});
   root.querySelector('.mr87-volume')?.addEventListener('wheel',e=>{e.preventDefault();store.state.volume=clamp(store.state.volume+(e.deltaY<0?5:-5),0,100);save();renderRadio()},{passive:false});
 }
 
+function bindSettingsDrag(r){
+  const panel=r?.querySelector?.('.mrs-panel'),head=r?.querySelector?.('.mrs-title'),doc=r?.ownerDocument,win=doc?.defaultView;if(!panel||!head||!win||head.dataset.dragBound==='1')return;head.dataset.dragBound='1';
+  let d=null;
+  const stop=e=>{if(!d)return;try{if(e?.pointerId!=null&&head.hasPointerCapture?.(e.pointerId))head.releasePointerCapture(e.pointerId)}catch{};d=null;r.classList.remove('mrs-dragging')};
+  head.addEventListener('pointerdown',e=>{
+    if(win.innerWidth<=720||e.button!==0)return;
+    if(e.target?.closest?.('button,a,input,select,textarea,[data-no-drag]'))return;
+    const rect=panel.getBoundingClientRect();
+    panel.style.setProperty('position','fixed','important');panel.style.setProperty('left',`${Math.round(rect.left)}px`,'important');panel.style.setProperty('top',`${Math.round(rect.top)}px`,'important');panel.style.setProperty('margin','0','important');
+    d={id:e.pointerId,x:e.clientX,y:e.clientY,left:rect.left,top:rect.top,width:rect.width,height:rect.height};
+    try{head.setPointerCapture?.(e.pointerId)}catch{};r.classList.add('mrs-dragging');e.preventDefault();
+  });
+  head.addEventListener('pointermove',e=>{if(!d||e.pointerId!==d.id)return;const pad=8,maxLeft=Math.max(pad,win.innerWidth-d.width-pad),maxTop=Math.max(pad,win.innerHeight-d.height-pad);panel.style.setProperty('left',`${Math.round(clamp(d.left+e.clientX-d.x,pad,maxLeft))}px`,'important');panel.style.setProperty('top',`${Math.round(clamp(d.top+e.clientY-d.y,pad,maxTop))}px`,'important')});
+  head.addEventListener('pointerup',stop);head.addEventListener('pointercancel',stop);head.addEventListener('lostpointercapture',()=>{d=null;r.classList.remove('mrs-dragging')});
+}
+
 function bindSettings(){
-  const r=getSettingsOverlay();if(!r||r.dataset.bound==='1')return;r.dataset.bound='1';
+  const r=getSettingsOverlay();if(!r||r.dataset.bound==='1')return;r.dataset.bound='1';bindSettingsDrag(r);
   r.addEventListener('click',async e=>{
     if(e.target===r){closeSettings();return}
+    const help=e.target.closest('.mrs-help');if(help){help.focus();return}
     const tab=e.target.closest('[data-s-tab]');if(tab){activateSettingsTab(tab.dataset.sTab);return}
     const b=e.target.closest('[data-s-action]');if(!b)return;const a=b.dataset.sAction;
     if(a==='close'){closeSettings();return}
     if(a==='save'){try{readSettings();RH.toastr?.success?.('收音机设置已保存');closeSettings()}catch(err){RH.toastr?.error?.(err?.message||String(err))}return}
     if(a==='refresh-proxies'){refreshProxyPresetOptions(r,true);return}
     if(a==='fetch-models'){await fetchModelsIntoUi(r,b);return}
-    if(a==='test'){
-      try{readSettings()}catch(err){RH.toastr?.error?.(err?.message||String(err));return}
-      b.disabled=true;const old=b.textContent;b.textContent='测试中…';
-      try{await testConnection();RH.toastr?.success?.('生成来源连接正常')}catch(err){RH.toastr?.error?.(`API测试失败：${err?.message||err}`)}finally{b.disabled=false;b.textContent=old}return
-    }
     if(a==='clear-history'){clearHistory();RH.toastr?.info?.('广播历史已清空');return}
   });
   r.addEventListener('input',e=>{
@@ -427,14 +452,15 @@ function bindSettings(){
     if(n==='civilian')r.querySelector('[data-s-value="civilian"]').textContent=`${e.target.value}%`;
     if(n==='static')r.querySelector('[data-s-value="static"]').textContent=`${e.target.value}%`;
     if(n==='scale'){r.querySelector('[data-s-value="scale"]').textContent=`${e.target.value}%`;RDOC.getElementById(ROOT)?.style.setProperty('--mr87-scale',String(clamp(e.target.value,80,120)/100))}
-    if(n==='apiUrl')e.target.dataset.autoUrl='0';
+    if(n==='apiUrl'){e.target.dataset.autoUrl='0';if(String(e.target.value||'').trim()!==modelCacheUrl)clearModelPicker(r)}
   });
   r.addEventListener('change',e=>{
     const n=e.target.name;
     if(n==='mode'){applyModeUi(r,e.target.value);return}
     if(n==='inheritSampling'){stashSamplingState(r);applySamplingUi(r,selectedMode(r));return}
     if(n==='proxyModelOverride'){r.querySelector('[data-proxy-model-row]')?.classList.toggle('mrs-hidden',!e.target.checked);return}
-    if(n==='source'){maybeAutofillUrl(r);return}
+    if(n==='modelPick'){const input=r.querySelector('[name="customModel"]');if(input&&e.target.value)input.value=e.target.value;return}
+    if(n==='source'){maybeAutofillUrl(r);if(String(r.querySelector('[name="apiUrl"]')?.value||'').trim()!==modelCacheUrl)clearModelPicker(r);return}
   });
 }
 
@@ -443,6 +469,8 @@ export function installUi(){
   try{RDOC.getElementById('swz-radio-style-v105')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v106')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v107')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v110')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v130')?.remove()}catch{}
   ensureStyle();
   closeSettings();
   setRenderer((type,payload)=>{if(type==='error'){const root=RDOC.getElementById(ROOT);if(root){root.querySelector('.mr87-headline').textContent='接收失败';root.querySelector('.mr87-transcript').textContent=String(payload||'未知错误')}}else renderRadio()});

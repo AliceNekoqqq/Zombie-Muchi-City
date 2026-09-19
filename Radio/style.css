@@ -48,3 +48,11 @@
   .swz-settings-grid{grid-template-columns:1fr!important;padding:10px!important;padding-bottom:18px!important}
   .swz-setting-card.swz-full{grid-column:auto!important}
 }
+
+/* v1.3.0 · daily map-intel / reroll controls */
+.mr87-intel-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding:8px 9px;border:1px solid rgba(94,121,126,.16);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.07))}
+.mr87-intel-state{display:flex;align-items:center;gap:8px;min-width:0}.mr87-intel-state span{font-size:8px;color:#6b7b80}.mr87-intel-state b{font-size:9px;font-weight:600;color:#3e5d62;white-space:nowrap}
+.mr87-reroll-wrap{display:flex;align-items:center;gap:5px;position:relative}.mr87-reroll{appearance:none;padding:7px 10px;border:1px solid rgba(126,101,112,.24);border-radius:8px;background:linear-gradient(180deg,#fff8fa,#eadde1);color:#75515d;font-size:8px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}.mr87-reroll:hover:not(:disabled){border-color:rgba(146,96,113,.38);background:linear-gradient(180deg,#fffafd,#ead8de)}.mr87-reroll:disabled{opacity:.42;cursor:default;filter:saturate(.55)}
+.mr87-help{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;padding:0;border:1px solid rgba(94,121,126,.22);border-radius:50%;background:#f0ede6;color:#62777c;font-size:8px;line-height:1;cursor:help;outline:none}.mr87-help::after{content:attr(data-tip);position:absolute;z-index:50;right:-2px;bottom:calc(100% + 8px);width:238px;max-width:72vw;padding:8px 9px;border:1px solid rgba(91,116,121,.24);border-radius:9px;background:rgba(246,243,237,.98);color:#42565b;font-size:8px;line-height:1.55;text-align:left;white-space:normal;box-shadow:0 12px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(4px);transition:.14s ease}.mr87-help:hover::after,.mr87-help:focus::after{opacity:1;transform:none}
+@media(max-width:720px){.mr87-intel-tools{align-items:flex-start}.mr87-intel-state{flex-direction:column;align-items:flex-start;gap:2px}.mr87-reroll{padding:7px 8px}.mr87-help::after{right:-4px;width:220px}}
+@media(max-width:480px){.mr87-intel-tools{display:grid;grid-template-columns:1fr auto}.mr87-intel-state b{white-space:normal}.mr87-reroll{max-width:120px}}
