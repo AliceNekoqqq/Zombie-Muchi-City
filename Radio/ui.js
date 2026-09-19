@@ -99,7 +99,7 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:50!important;right:-4px!important;bottom:calc(100% + 8px)!important;width:245px!important;max-width:70vw!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:10px!important;background:rgba(12,14,17,.97)!important;color:#c9c3bb!important;font-size:8px!important;line-height:1.65!important;text-align:left!important;white-space:normal!important;box-shadow:0 18px 42px rgba(0,0,0,.42)!important;opacity:0!important;pointer-events:none!important;transform:translateY(4px)!important;transition:.14s ease!important}
 #${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:none!important}
 
-/* v1.9.0 physical receiver rebuild */
+/* v1.9.1 physical receiver rebuild */
 #${SETTINGS}.mrs-overlay{background:rgba(3,4,6,.34)!important;backdrop-filter:blur(3px)!important}
 #${SETTINGS} .mrs-panel{width:min(760px,calc(100vw - 34px))!important;height:min(650px,calc(100vh - 34px))!important;grid-template-rows:62px minmax(0,1fr) 52px!important;background:rgba(12,15,18,.34)!important;border-color:rgba(235,218,197,.22)!important}
 #${SETTINGS} .mrs-scene-image{opacity:.96!important;filter:saturate(.98) contrast(1.07) brightness(.95)!important;object-position:center 60%!important}
@@ -492,7 +492,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.9.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.9.1] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;

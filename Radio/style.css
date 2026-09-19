@@ -1,4 +1,4 @@
-/* MR-87 v1.9.0 · physical receiver rebuild */
+/* MR-87 v1.9.1 · physical receiver rebuild */
 .swz-mr87-inline{
   --ink:#f1ece5;--soft:#d6cec4;--muted:#9f9890;--dim:#747a7a;
   --teal:#9bc4bf;--teal2:#5f8580;--amber:#c9a174;--rose:#9f6f78;
@@ -74,3 +74,90 @@
 }
 @media(max-width:430px){.mr87-brief-summary{font-size:7px}.mr87-brief-signal{display:none}.mr87-intel-copy b{display:block;margin-bottom:2px}.mr87-reroll{max-width:118px;white-space:normal}.mr87-log-list button{grid-template-columns:auto 1fr!important}.mr87-log-list button small{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.swz-mr87-inline.scanning .mr87-broadcast-card{animation:none}.swz-mr87-inline *{scroll-behavior:auto!important;transition:none!important}}
+
+/* MR-87 v1.9.1 · component-width layout hotfix
+   Tavern/SillyTavern message columns can be much narrower than the browser viewport.
+   Use the receiver's own inline size so controls never collapse into vertical slivers. */
+.swz-mr87-inline{container-type:inline-size;container-name:mr87}
+
+/* manual request: two-row instrument panel, never squeeze three channel keys beside the main switch */
+.mr87-request-panel{
+  grid-template-columns:minmax(0,1fr) 142px!important;
+  grid-template-areas:
+    "copy copy"
+    "channels receive"!important;
+  gap:7px 9px!important;
+  align-items:stretch!important;
+  padding:9px 10px 10px!important;
+}
+.mr87-request-copy{grid-area:copy;min-width:0;justify-content:flex-start!important}
+.mr87-request-channels{grid-area:channels;min-width:0;grid-template-columns:repeat(3,minmax(58px,1fr))!important;gap:6px!important}
+.mr87-request-channels button{
+  min-width:0!important;
+  min-height:36px!important;
+  padding:0 7px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  font-size:7.5px!important;
+}
+.mr87-receive{
+  grid-area:receive;
+  width:100%!important;
+  min-width:0!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  white-space:nowrap!important;
+}
+
+/* bottom hardware rail: reserve a real minimum width for every physical section */
+.mr87-control-deck{
+  grid-template-columns:minmax(245px,.92fr) minmax(260px,1.08fr) minmax(118px,.45fr)!important;
+  gap:10px!important;
+  align-items:center!important;
+}
+.mr87-device-panel,.mr87-nav-panel,.mr87-shortcuts{min-width:0}
+.mr87-funcs{grid-template-columns:repeat(5,minmax(42px,1fr))!important;gap:6px!important}
+.mr87-funcs button{
+  min-width:42px!important;
+  min-height:44px!important;
+  padding:5px 3px!important;
+  overflow:hidden!important;
+}
+.mr87-funcs button em{white-space:nowrap!important;font-size:6.5px!important}
+.mr87-nav-panel{grid-template-columns:52px minmax(150px,1fr) 52px!important;gap:8px!important}
+.mr87-knob-wrap{min-width:52px!important}
+.mr87-keys{grid-template-columns:40px minmax(74px,1fr) 40px!important;gap:6px!important}
+.mr87-keys button{min-width:0!important;white-space:nowrap!important}
+
+/* Medium component widths: device keys get a complete row; tuning controls stay on a second row.
+   This is intentionally a container query, not a viewport media query. */
+@container mr87 (max-width:760px){
+  .mr87-control-deck{
+    grid-template-columns:minmax(0,1fr) 132px!important;
+    grid-template-areas:
+      "device shortcuts"
+      "nav nav"!important;
+    align-items:stretch!important;
+  }
+  .mr87-device-panel{grid-area:device}
+  .mr87-nav-panel{grid-area:nav;grid-template-columns:54px minmax(0,1fr) 54px!important;padding-top:2px}
+  .mr87-shortcuts{grid-area:shortcuts}
+  .mr87-funcs{grid-template-columns:repeat(5,minmax(44px,1fr))!important}
+  .mr87-shortcuts>button{min-height:34px!important}
+  .mr87-request-panel{grid-template-columns:minmax(0,1fr) 132px!important}
+}
+
+/* Narrow receiver body: stack the request action below channel picks; never overlay controls. */
+@container mr87 (max-width:590px){
+  .mr87-request-panel{
+    grid-template-columns:1fr!important;
+    grid-template-areas:
+      "copy"
+      "channels"
+      "receive"!important;
+  }
+  .mr87-request-channels{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .mr87-receive{min-height:40px!important}
+  .mr87-control-deck{display:none!important}
+}
