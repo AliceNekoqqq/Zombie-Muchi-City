@@ -1,9 +1,9 @@
-import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, getProxyPresets, fetchModelList, generationCapabilities } from './core.js';
+import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, canCancelGeneration, cancelActiveGeneration, getActiveRequest, getProxyPresets, fetchModelList, generationCapabilities } from './core.js';
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v140';
-const STYLE='swz-radio-style-v140';
+const SETTINGS_FRAME='swz-radio-settings-frame-v160';
+const STYLE='swz-radio-style-v160';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -25,66 +25,74 @@ const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
 function styleUrl(){return new URL('./style.css',import.meta.url).href;}
+function radioBackdropUrl(){return new URL('../Assets/MR87_backdrop.png',import.meta.url).href;}
 function ensureStyle(){if(RDOC.getElementById(STYLE))return;const link=RDOC.createElement('link');link.id=STYLE;link.rel='stylesheet';link.href=styleUrl();RDOC.head.appendChild(link)}
 function settingsCss(){return `
-#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:12px!important;overflow:auto!important;background:rgba(5,8,10,.86)!important;color:#dfe8e7!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important}
+#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:18px!important;overflow:auto!important;background:rgba(4,6,8,.68)!important;color:#eee9e2!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important;backdrop-filter:blur(8px)!important}
 #${SETTINGS}.mrs-overlay.mrs-open{display:flex!important}
 #${SETTINGS},#${SETTINGS} *{box-sizing:border-box!important}
-#${SETTINGS} .mrs-panel{position:relative!important;width:min(760px,calc(100vw - 40px))!important;max-height:calc(100vh - 40px)!important;display:grid!important;grid-template-rows:58px 42px minmax(0,1fr) 54px!important;overflow:hidden!important;border:1px solid rgba(154,184,187,.16)!important;border-radius:18px!important;background:#0d1316!important;color:#dfe8e7!important;box-shadow:0 24px 60px rgba(0,0,0,.42)!important}
-#${SETTINGS} .mrs-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 14px 0 18px!important;border-bottom:1px solid rgba(154,184,187,.10)!important;background:#10171a!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important}
+#${SETTINGS} .mrs-panel{position:relative!important;isolation:isolate!important;width:min(700px,calc(100vw - 44px))!important;max-height:calc(100vh - 44px)!important;display:grid!important;grid-template-rows:64px 44px minmax(0,1fr) 56px!important;overflow:hidden!important;border:1px solid rgba(235,216,194,.18)!important;border-radius:22px!important;background:linear-gradient(180deg,rgba(12,15,18,.96),rgba(8,11,13,.97))!important;color:#eee9e2!important;box-shadow:0 30px 90px rgba(0,0,0,.54),inset 0 1px 0 rgba(255,255,255,.035)!important}
+#${SETTINGS} .mrs-panel::before{content:""!important;position:absolute!important;inset:0!important;z-index:-2!important;background-image:linear-gradient(90deg,rgba(7,9,11,.96) 0%,rgba(7,9,11,.86) 48%,rgba(7,9,11,.72) 100%),url("${radioBackdropUrl()}")!important;background-size:cover!important;background-position:center 60%!important;filter:saturate(.68) brightness(.70)!important;opacity:.58!important}
+#${SETTINGS} .mrs-panel::after{content:""!important;position:absolute!important;inset:0!important;z-index:-1!important;background:radial-gradient(440px 220px at 12% 0,rgba(214,160,110,.08),transparent 70%),radial-gradient(380px 220px at 95% 18%,rgba(155,201,198,.06),transparent 72%)!important;pointer-events:none!important}
+#${SETTINGS} .mrs-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 14px 0 18px!important;border-bottom:1px solid rgba(235,216,194,.12)!important;background:rgba(8,11,13,.72)!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important;backdrop-filter:blur(10px)!important}
 #${SETTINGS}.mrs-dragging .mrs-title{cursor:grabbing!important}
-#${SETTINGS} .mrs-title b{font-family:"Noto Serif SC","Songti SC",serif!important;font-size:16px!important;letter-spacing:.08em!important;color:#dfe8e7!important}
-#${SETTINGS} .mrs-title span{display:block!important;margin-top:3px!important;color:#687a7e!important;font-size:8px!important}
-#${SETTINGS} .mrs-close{appearance:none!important;width:36px!important;height:36px!important;padding:0!important;border:1px solid rgba(154,184,187,.14)!important;border-radius:9px!important;background:#151d20!important;color:#cbd7d6!important;font-size:19px!important;line-height:34px!important;text-align:center!important;cursor:pointer!important}
-#${SETTINGS} .mrs-tabs{display:flex!important;gap:4px!important;padding:6px 10px!important;border-bottom:1px solid rgba(154,184,187,.09)!important;background:#0b1113!important;overflow-x:auto!important}
-#${SETTINGS} .mrs-tabs button{appearance:none!important;flex:1 0 74px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:#718387!important;font-size:9px!important;cursor:pointer!important}
-#${SETTINGS} .mrs-tabs button.active{background:rgba(155,214,214,.07)!important;color:#dbe8e7!important;box-shadow:inset 0 0 0 1px rgba(155,214,214,.10)!important}
-#${SETTINGS} .mrs-content{min-height:0!important;overflow:auto!important;padding:11px!important;overscroll-behavior:contain!important}
-#${SETTINGS} .mrs-page{display:none!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
+#${SETTINGS} .mrs-title b{font-family:"Noto Serif SC","Songti SC",serif!important;font-size:17px!important;font-weight:520!important;letter-spacing:.09em!important;color:#f2ebe3!important}
+#${SETTINGS} .mrs-title span{display:block!important;margin-top:4px!important;color:#888b8b!important;font-size:8px!important;letter-spacing:.06em!important}
+#${SETTINGS} .mrs-close{appearance:none!important;width:36px!important;height:36px!important;padding:0!important;border:1px solid rgba(235,216,194,.14)!important;border-radius:10px!important;background:rgba(18,21,24,.66)!important;color:#bbb5ad!important;font-size:20px!important;line-height:34px!important;text-align:center!important;cursor:pointer!important}
+#${SETTINGS} .mrs-close:hover{border-color:rgba(197,141,151,.30)!important;color:#ead4d9!important;background:rgba(70,39,47,.30)!important}
+#${SETTINGS} .mrs-tabs{display:flex!important;gap:5px!important;padding:6px 10px!important;border-bottom:1px solid rgba(235,216,194,.09)!important;background:rgba(8,11,13,.58)!important;overflow-x:auto!important;backdrop-filter:blur(8px)!important}
+#${SETTINGS} .mrs-tabs button{appearance:none!important;flex:1 0 72px!important;border:1px solid transparent!important;border-radius:9px!important;background:transparent!important;color:#828788!important;font-size:9px!important;cursor:pointer!important;transition:.16s ease!important}
+#${SETTINGS} .mrs-tabs button:hover{color:#d6cec5!important;background:rgba(255,255,255,.025)!important}
+#${SETTINGS} .mrs-tabs button.active{border-color:rgba(155,201,198,.18)!important;background:rgba(155,201,198,.08)!important;color:#e8efeb!important;box-shadow:inset 0 -2px 0 rgba(155,201,198,.42)!important}
+#${SETTINGS} .mrs-content{min-height:0!important;overflow:auto!important;padding:12px!important;overscroll-behavior:contain!important;scrollbar-width:thin!important}
+#${SETTINGS} .mrs-page{display:none!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
 #${SETTINGS} .mrs-page.active{display:grid!important}
-#${SETTINGS} .mrs-card{padding:13px!important;border:1px solid rgba(154,184,187,.10)!important;border-radius:12px!important;background:#10171a!important;color:#dfe8e7!important}
+#${SETTINGS} .mrs-card{padding:14px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:14px!important;background:linear-gradient(180deg,rgba(18,21,24,.72),rgba(10,13,15,.74))!important;color:#eee9e2!important;backdrop-filter:blur(9px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.02)!important}
 #${SETTINGS} .mrs-card.mrs-full{grid-column:1/-1!important}
-#${SETTINGS} .mrs-card h3{margin:0 0 11px!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:12px!important;font-weight:600!important;color:#e2ebea!important}
-#${SETTINGS} .mrs-card p{margin:7px 0 0!important;color:#6c7f83!important;font-size:8px!important;line-height:1.65!important}
-#${SETTINGS} .mrs-card label{display:block!important;margin-top:9px!important;color:#7c8e91!important;font-size:8px!important}
-#${SETTINGS} .mrs-card input:not([type=checkbox]):not([type=range]),#${SETTINGS} .mrs-card select,#${SETTINGS} .mrs-card textarea{appearance:auto!important;width:100%!important;margin-top:5px!important;padding:8px!important;border:1px solid rgba(154,184,187,.13)!important;border-radius:8px!important;background:#080d0f!important;color:#d5dfde!important;outline:none!important;font-size:9px!important}
-#${SETTINGS} .mrs-card textarea{min-height:68px!important;resize:vertical!important}
-#${SETTINGS} .mrs-card input[type=range]{width:100%!important;margin-top:6px!important}
-#${SETTINGS} .mrs-check{display:flex!important;align-items:center!important;gap:7px!important}
-#${SETTINGS} .mrs-check input{margin:0!important}
+#${SETTINGS} .mrs-card h3{display:flex!important;align-items:center!important;margin:0 0 12px!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:12px!important;font-weight:560!important;letter-spacing:.06em!important;color:#eee7de!important}
+#${SETTINGS} .mrs-card h3::before{content:""!important;width:2px!important;height:12px!important;margin-right:8px!important;border-radius:2px!important;background:linear-gradient(180deg,#d6a06e,#c58d97)!important}
+#${SETTINGS} .mrs-card p{margin:7px 0 0!important;color:#83898a!important;font-size:8px!important;line-height:1.7!important}
+#${SETTINGS} .mrs-card label{display:block!important;margin-top:10px!important;color:#969895!important;font-size:8px!important}
+#${SETTINGS} .mrs-card input:not([type=checkbox]):not([type=range]),#${SETTINGS} .mrs-card select,#${SETTINGS} .mrs-card textarea{appearance:auto!important;width:100%!important;margin-top:6px!important;padding:9px 10px!important;border:1px solid rgba(235,216,194,.12)!important;border-radius:9px!important;background:rgba(5,8,10,.72)!important;color:#ded8d0!important;outline:none!important;font-size:9px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.015)!important}
+#${SETTINGS} .mrs-card input:focus,#${SETTINGS} .mrs-card select:focus,#${SETTINGS} .mrs-card textarea:focus{border-color:rgba(155,201,198,.30)!important;box-shadow:0 0 0 2px rgba(155,201,198,.06)!important}
+#${SETTINGS} .mrs-card textarea{min-height:72px!important;resize:vertical!important;line-height:1.65!important}
+#${SETTINGS} .mrs-card input[type=range]{width:100%!important;margin-top:7px!important;accent-color:#9bc9c6!important}
+#${SETTINGS} .mrs-check{display:flex!important;align-items:center!important;gap:7px!important;line-height:1.5!important}
+#${SETTINGS} .mrs-check input{margin:0!important;accent-color:#9bc9c6!important}
 #${SETTINGS} .mrs-actions{margin-top:10px!important}
-#${SETTINGS} .mrs-actions button,#${SETTINGS} .mrs-footer button{appearance:none!important;padding:8px 10px!important;border:1px solid rgba(154,184,187,.13)!important;border-radius:8px!important;background:#151e21!important;color:#bfcfce!important;font-size:8px!important;cursor:pointer!important}
-#${SETTINGS} .mrs-footer{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;padding:9px 12px!important;border-top:1px solid rgba(154,184,187,.10)!important;background:#0c1214!important}
-#${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(155,214,214,.20)!important;background:rgba(155,214,214,.07)!important;color:#d9eeee!important}
+#${SETTINGS} .mrs-actions button,#${SETTINGS} .mrs-footer button{appearance:none!important;padding:8px 11px!important;border:1px solid rgba(235,216,194,.13)!important;border-radius:9px!important;background:rgba(19,22,24,.72)!important;color:#bdb7af!important;font-size:8px!important;cursor:pointer!important}
+#${SETTINGS} .mrs-actions button:hover,#${SETTINGS} .mrs-footer button:hover{border-color:rgba(216,160,110,.25)!important;color:#eee5da!important;background:rgba(31,29,29,.78)!important}
+#${SETTINGS} .mrs-footer{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;padding:9px 12px!important;border-top:1px solid rgba(235,216,194,.10)!important;background:rgba(8,11,13,.72)!important;backdrop-filter:blur(10px)!important}
+#${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(155,201,198,.24)!important;background:rgba(59,96,93,.28)!important;color:#e3eeea!important}
 #${SETTINGS} .mrs-mode-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-mode-option{position:relative!important;display:block!important;margin:0!important;cursor:pointer!important}
 #${SETTINGS} .mrs-mode-option input{position:absolute!important;opacity:0!important;pointer-events:none!important}
-#${SETTINGS} .mrs-mode-option span{display:block!important;min-height:70px!important;padding:11px 12px!important;border:1px solid rgba(154,184,187,.11)!important;border-radius:10px!important;background:#0a1012!important;transition:.16s ease!important}
-#${SETTINGS} .mrs-mode-option b{display:block!important;color:#cbd8d7!important;font-size:10px!important;font-weight:600!important}
-#${SETTINGS} .mrs-mode-option small{display:block!important;margin-top:5px!important;color:#667a7e!important;font-size:7px!important;line-height:1.5!important}
-#${SETTINGS} .mrs-mode-option input:checked+span{border-color:rgba(151,222,223,.34)!important;background:rgba(117,190,192,.08)!important;box-shadow:inset 0 0 0 1px rgba(151,222,223,.08)!important}
-#${SETTINGS} .mrs-mode-option input:checked+span b{color:#e2f1f0!important}
-#${SETTINGS} .mrs-engine-shell{margin-top:10px!important;padding:11px!important;border:1px solid rgba(154,184,187,.08)!important;border-radius:10px!important;background:#0b1113!important}
+#${SETTINGS} .mrs-mode-option span{display:block!important;min-height:76px!important;padding:11px 12px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:11px!important;background:rgba(6,9,11,.60)!important;transition:.16s ease!important}
+#${SETTINGS} .mrs-mode-option b{display:block!important;color:#cbc4bc!important;font-size:10px!important;font-weight:600!important}
+#${SETTINGS} .mrs-mode-option small{display:block!important;margin-top:6px!important;color:#767e80!important;font-size:7px!important;line-height:1.55!important}
+#${SETTINGS} .mrs-mode-option input:checked+span{border-color:rgba(155,201,198,.30)!important;background:rgba(58,92,90,.22)!important;box-shadow:inset 0 0 0 1px rgba(155,201,198,.05)!important}
+#${SETTINGS} .mrs-mode-option input:checked+span b{color:#e7efeb!important}
+#${SETTINGS} .mrs-engine-shell{margin-top:10px!important;padding:11px!important;border:1px solid rgba(235,216,194,.08)!important;border-radius:11px!important;background:rgba(5,8,10,.55)!important}
 #${SETTINGS} .mrs-engine{display:none!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
 #${SETTINGS} .mrs-engine.active{display:grid!important}
 #${SETTINGS} .mrs-engine .mrs-wide{grid-column:1/-1!important}
-#${SETTINGS} .mrs-source-note{display:flex!important;align-items:flex-start!important;gap:8px!important;padding:9px 10px!important;border:1px solid rgba(154,184,187,.08)!important;border-radius:8px!important;background:#0a0f11!important;color:#788a8d!important;font-size:8px!important;line-height:1.55!important}
-#${SETTINGS} .mrs-source-note strong{color:#b9c9c8!important;white-space:nowrap!important}
+#${SETTINGS} .mrs-source-note{display:flex!important;align-items:flex-start!important;gap:8px!important;padding:9px 10px!important;border:1px solid rgba(155,201,198,.10)!important;border-radius:9px!important;background:rgba(44,70,69,.13)!important;color:#858f8e!important;font-size:8px!important;line-height:1.6!important}
+#${SETTINGS} .mrs-source-note strong{color:#b9cbc7!important;white-space:nowrap!important}
 #${SETTINGS} .mrs-field-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important;align-items:end!important}
 #${SETTINGS} .mrs-field-row>label{margin-top:0!important}
-#${SETTINGS} .mrs-mini-btn{appearance:none!important;min-width:86px!important;height:31px!important;padding:0 10px!important;border:1px solid rgba(154,184,187,.13)!important;border-radius:8px!important;background:#151e21!important;color:#bfcfce!important;font-size:8px!important;cursor:pointer!important}
+#${SETTINGS} .mrs-mini-btn{appearance:none!important;min-width:86px!important;height:33px!important;padding:0 10px!important;border:1px solid rgba(235,216,194,.13)!important;border-radius:9px!important;background:rgba(19,22,24,.75)!important;color:#bdb7af!important;font-size:8px!important;cursor:pointer!important}
+#${SETTINGS} .mrs-mini-btn:hover{border-color:rgba(155,201,198,.24)!important;color:#e3eeea!important}
 #${SETTINGS} .mrs-mini-btn:disabled{opacity:.45!important;cursor:default!important}
-#${SETTINGS} .mrs-status{min-height:16px!important;margin-top:6px!important;color:#667b7f!important;font-size:7px!important;line-height:1.5!important}
-#${SETTINGS} .mrs-status.ok{color:#8fb9ad!important}
-#${SETTINGS} .mrs-status.warn{color:#bba77c!important}
+#${SETTINGS} .mrs-status{min-height:16px!important;margin-top:6px!important;color:#767f80!important;font-size:7px!important;line-height:1.5!important}
+#${SETTINGS} .mrs-status.ok{color:#91b8ac!important}#${SETTINGS} .mrs-status.warn{color:#c4a776!important}
 #${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-model-pick-row select{cursor:pointer!important}
 #${SETTINGS} .mrs-hidden{display:none!important}
-#${SETTINGS} .mrs-badge{display:inline-flex!important;align-items:center!important;min-height:20px!important;padding:2px 7px!important;border:1px solid rgba(154,184,187,.10)!important;border-radius:999px!important;background:#0a1012!important;color:#7d9093!important;font-size:7px!important}
-#${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;margin-left:5px!important;border:1px solid rgba(154,184,187,.16)!important;border-radius:50%!important;background:#0a1012!important;color:#8fa6aa!important;font-size:8px!important;font-style:normal!important;cursor:help!important;vertical-align:middle!important;outline:none!important}
-#${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:30!important;left:50%!important;bottom:calc(100% + 8px)!important;width:220px!important;max-width:70vw!important;padding:8px 9px!important;border:1px solid rgba(154,184,187,.14)!important;border-radius:8px!important;background:#080d0f!important;color:#b9c8c7!important;font-size:8px!important;line-height:1.55!important;box-shadow:0 10px 28px rgba(0,0,0,.32)!important;transform:translate(-50%,4px)!important;opacity:0!important;pointer-events:none!important;transition:.14s ease!important;white-space:normal!important}
+#${SETTINGS} .mrs-badge{display:inline-flex!important;align-items:center!important;min-height:20px!important;padding:2px 7px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:999px!important;background:rgba(8,11,13,.62)!important;color:#8d9291!important;font-size:7px!important}
+#${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;margin-left:5px!important;border:1px solid rgba(235,216,194,.16)!important;border-radius:50%!important;background:rgba(8,11,13,.74)!important;color:#a7a19a!important;font-size:8px!important;font-style:normal!important;cursor:help!important;vertical-align:middle!important;outline:none!important}
+#${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:30!important;left:50%!important;bottom:calc(100% + 8px)!important;width:228px!important;max-width:70vw!important;padding:9px 10px!important;border:1px solid rgba(235,216,194,.15)!important;border-radius:9px!important;background:rgba(10,13,15,.98)!important;color:#c7c2bb!important;font-size:8px!important;line-height:1.6!important;box-shadow:0 14px 32px rgba(0,0,0,.38)!important;transform:translate(-50%,4px)!important;opacity:0!important;pointer-events:none!important;transition:.14s ease!important;white-space:normal!important}
 #${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:translate(-50%,0)!important}
-@media(max-width:720px){#${SETTINGS}.mrs-overlay{padding:0!important}#${SETTINGS} .mrs-panel{width:100vw!important;max-height:100vh!important;height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:56px 42px minmax(0,1fr) 54px!important}#${SETTINGS} .mrs-title{padding-left:13px!important}#${SETTINGS} .mrs-title b{font-size:14px!important}#${SETTINGS} .mrs-title span{font-size:7px!important}#${SETTINGS} .mrs-content{padding:8px!important}#${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}#${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine .mrs-wide{grid-column:auto!important}#${SETTINGS} .mrs-sampling-fields{grid-template-columns:1fr!important}}
+@media(max-width:720px){#${SETTINGS}.mrs-overlay{padding:0!important;background:rgba(4,6,8,.84)!important}#${SETTINGS} .mrs-panel{width:100vw!important;max-height:100vh!important;height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:58px 42px minmax(0,1fr) 54px!important}#${SETTINGS} .mrs-title{padding-left:13px!important;cursor:default!important}#${SETTINGS} .mrs-title b{font-size:14px!important}#${SETTINGS} .mrs-title span{font-size:7px!important}#${SETTINGS} .mrs-content{padding:8px!important}#${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}#${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine .mrs-wide{grid-column:auto!important}#${SETTINGS} .mrs-sampling-fields{grid-template-columns:1fr!important}}
 `; }
 function getSettingsFrame(){return RDOC.getElementById(SETTINGS_FRAME)}
 function getSettingsDoc(){try{return getSettingsFrame()?.contentDocument||null}catch{return null}}
@@ -136,25 +144,32 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
   </div>
   <div class="mr87-drawer">
     <div class="mr87-topline">
-      <div class="mr87-brand"><b>暮迟 · MR-87</b><span>便携多波段接收终端</span></div>
-      <div class="mr87-status"><i class="mr87-power-led"></i><span>接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button></div>
+      <div class="mr87-brand"><b>MR-87 · 废墟电波</b><span>MUCHI CITY / SAME FREQUENCY, DIFFERENT TOMORROW</span></div>
+      <div class="mr87-status"><i class="mr87-power-led"></i><span>正在接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button></div>
     </div>
     <div class="mr87-body">
-      <div class="mr87-speaker-side"><div class="mr87-speaker"></div><div class="mr87-meter"><span></span><span></span><span></span><span></span><span></span><i></i></div><div class="mr87-speaker-label">MR-87 · 接收单元</div></div>
+      <aside class="mr87-speaker-side">
+        <div class="mr87-side-label"><b>频段选择</b><small>CHANNEL</small></div>
+        <div class="mr87-presets"><button data-r-channel="global">SW · 全球</button><button data-r-channel="china">SW · 中国</button><button data-r-channel="muchi">FM · 暮迟市</button></div>
+        <div class="mr87-speaker"></div>
+        <div class="mr87-meter"><span></span><span></span><span></span><span></span><span></span><i></i></div>
+        <div class="mr87-speaker-label">MR-87 · RECEIVER UNIT</div>
+        <div class="mr87-side-quote">“无线电没有熄灭，就还不算世界的尽头。”<small>STILL HERE · 87.4</small></div>
+      </aside>
       <div class="mr87-console">
         <div class="mr87-screen">
           <div class="mr87-screen-top"><div><span class="mr87-freq">88.7</span><span class="mr87-band">FM</span><small class="mr87-station">暮迟市</small></div><div class="mr87-signal"><div class="mr87-bars"></div><small class="mr87-signal-text">一般</small></div></div>
           <div class="mr87-meta"><span class="mr87-time">--</span><span class="mr87-source">暂无广播</span></div>
           <div class="mr87-headline">等待接收</div><div class="mr87-transcript">当前频道还没有广播记录。</div><div class="mr87-impact"></div>
         </div>
-        <div class="mr87-presets"><button data-r-channel="global">SW · 全球</button><button data-r-channel="china">SW · 中国</button><button data-r-channel="muchi">FM · 暮迟市</button></div>
+        <div class="mr87-request-pick"><span>本次拉取</span><div class="mr87-request-channels"><button type="button" data-r-request-channel="global" aria-pressed="false">全球</button><button type="button" data-r-request-channel="china" aria-pressed="false">中国</button><button type="button" data-r-request-channel="muchi" aria-pressed="true">暮迟</button></div><button class="mr87-help" type="button" data-help data-tip="这里只决定下一次手动接收要生成哪些频道；可同时选择多个频道，所选频道仍合并成一次 API 请求，不会改变当前正在收听的频段。" aria-label="手动拉取频道说明">?</button></div>
         <div class="mr87-controls"><div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调频</small></div><div class="mr87-keys"><button data-r-action="prev">◀</button><button data-r-action="scan">扫频</button><button data-r-action="next">▶</button><button class="mr87-receive" data-r-action="receive">接收新播报</button></div><div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 · <span class="mr87-volume-num">48</span></small></div></div>
-        <div class="mr87-intel-tools"><div class="mr87-intel-state"><span>地图情报</span><b data-r-intel-status>今日未结算</b></div><div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div></div>
+        <div class="mr87-intel-tools"><div class="mr87-intel-state"><span>地图情报</span><b data-r-intel-status>今日未结算</b></div><div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div></div>
         <div class="mr87-funcs"><button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button><button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button><button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button><button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button><button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button><button class="mr87-utility" data-r-action="collapse"><span>↘</span><em>收起</em></button></div>
       </div>
     </div>
     <div class="mr87-log-drawer"><div class="mr87-log-head"><b>广播记录</b><span>最近接收</span></div><div class="mr87-log-list"></div></div>
-    <div class="mr87-foot"><span>灾变公共广播接收终端</span><span class="mr87-version">MR-87</span></div>
+    <div class="mr87-foot"><span>MR-87 RADIO · STILL LISTENING</span><span class="mr87-version">暮迟未散 · 频道仍在</span></div>
   </div>
 </section>`;}
 
@@ -231,6 +246,24 @@ function itemForRoot(root){
   return pinned?.channel===store.state.channel?pinned:latest(store.state.channel);
 }
 
+function requestChannels(){
+  const xs=[...new Set((Array.isArray(store.state.manualChannels)?store.state.manualChannels:[]).filter(k=>channels[k]))];
+  if(xs.length)return xs;
+  const fallback=channels[store.state.channel]?store.state.channel:'muchi';store.state.manualChannels=[fallback];save();return [fallback];
+}
+function toggleRequestChannel(k){
+  if(!channels[k]||isBusy())return requestChannels();
+  const xs=requestChannels();
+  if(xs.includes(k)){if(xs.length<=1){try{RH.toastr?.info?.('手动拉取至少保留一个频道')}catch{};return xs}store.state.manualChannels=xs.filter(x=>x!==k)}else store.state.manualChannels=[...xs,k].filter(x=>channels[x]);
+  save();renderRadio();return requestChannels();
+}
+function focusGenerated(items,root){
+  const rows=(Array.isArray(items)?items:[items]).filter(Boolean);if(!rows.length)return null;
+  let x=rows.find(v=>v.channel===store.state.channel)||rows[0];
+  if(x&&store.state.channel!==x.channel){store.state.channel=x.channel;save()}
+  forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x);return x;
+}
+
 function renderRadio(preferred){
   const root=RDOC.getElementById(ROOT);if(!root)return;
   const item=preferred||itemForRoot(root);const c=channels[item?.channel||store.state.channel]||channels.muchi;
@@ -241,7 +274,8 @@ function renderRadio(preferred){
   root.querySelector('.mr87-freq').textContent=c.freq;root.querySelector('.mr87-band').textContent=c.band;root.querySelector('.mr87-station').textContent=`${c.label} · ${c.short}`;
   root.querySelector('.mr87-volume-num').textContent=Math.round(store.state.volume);root.querySelector('.mr87-volume')?.style.setProperty('--rot',`${-135+(store.state.volume/100)*270}deg`);
   root.querySelectorAll('[data-r-channel]').forEach(b=>b.classList.toggle('active',b.dataset.rChannel===store.state.channel));
-  const receive=root.querySelector('[data-r-action="receive"]');if(receive){receive.disabled=isBusy();receive.textContent=isBusy()?'接收中…':'接收新播报'}
+  const selected=requestChannels();root.querySelectorAll('[data-r-request-channel]').forEach(b=>{const on=selected.includes(b.dataset.rRequestChannel);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));b.disabled=isBusy()});
+  const receive=root.querySelector('[data-r-action="receive"]');if(receive){const busy=isBusy(),cancelable=canCancelGeneration();receive.disabled=busy&&!cancelable;receive.classList.toggle('is-cancel',cancelable);receive.textContent=cancelable?'■ 取消本次请求':busy?'正在整理…':selected.length>1?`接收 ${selected.length} 个频道`:'接收新播报';const req=getActiveRequest();receive.title=cancelable&&req?`取消正在生成的 ${req.channels.map(k=>channels[k]?.label||k).join(' + ')}`:''}
   const intel=getIntelUiState(),intelText=intel.status==='settled'?`第${intel.day||'?'}日已结算${intel.rerolls?` · 重Roll ${intel.rerolls}`:''}`:intel.status==='no_intel'?`第${intel.day||'?'}日待二次情报`:intel.status==='exhausted'?`第${intel.day||'?'}日无有效情报`:'今日未结算';
   const intelStatus=root.querySelector('[data-r-intel-status]');if(intelStatus)intelStatus.textContent=intelText;
   const reroll=root.querySelector('[data-r-action="reroll"]');if(reroll){reroll.disabled=isBusy()||!canRerollToday();reroll.textContent=isBusy()?'处理中…':'重Roll今日情报'}
@@ -380,7 +414,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.4.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.6.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
@@ -395,7 +429,7 @@ export function mountInline(force=false){
   const item=forced||scheduled||(force||forceShow||store.settings.showIdle?latest(store.state.channel):null);
   if(!store.settings.inline&&!force&&!forceShow)return;
   if(!item&&!store.settings.showIdle&&!force&&!forceShow)return;
-  host.insertAdjacentHTML('afterbegin',inlineHtml());const root=RDOC.getElementById(ROOT);if(!root)return;bindInline(root);root.dataset.broadcastId=item?.id||'';if(force||forceShow)root.classList.add('expanded');renderRadio(item||undefined);
+  host.insertAdjacentHTML('afterbegin',inlineHtml());const root=RDOC.getElementById(ROOT);if(!root)return;root.style.setProperty('--mr87-backdrop',`url("${radioBackdropUrl()}")`);bindInline(root);root.dataset.broadcastId=item?.id||'';if(force||forceShow)root.classList.add('expanded');renderRadio(item||undefined);
 }
 
 export function openRadio(){forceShow=true;forceBroadcastId=forceBroadcastId||latest(store.state.channel)?.id||'';mountInline(true);setTimeout(()=>RDOC.getElementById(ROOT)?.scrollIntoView({behavior:'smooth',block:'center'}),50)}
@@ -403,13 +437,17 @@ export function openRadio(){forceShow=true;forceBroadcastId=forceBroadcastId||la
 function bindInline(root){
   root.addEventListener('click',async e=>{
     const ch=e.target.closest('[data-r-channel]');if(ch){switchChannel(ch.dataset.rChannel);const x=latest(ch.dataset.rChannel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}
+    const pick=e.target.closest('[data-r-request-channel]');if(pick){toggleRequestChannel(pick.dataset.rRequestChannel);return}
     const row=e.target.closest('[data-log-index]');if(row){const x=store.history[Number(row.dataset.logIndex)];if(!x)return;store.state.channel=x.channel;save();root.dataset.broadcastId=x.id;forceBroadcastId=x.id;renderRadio(x);root.classList.remove('log-open');return}
     const help=e.target.closest('[data-help]');if(help){e.preventDefault();e.stopPropagation();help.focus();return}
     const b=e.target.closest('[data-r-action]');if(!b)return;const a=b.dataset.rAction;
     if(a==='toggle'){root.classList.toggle('expanded');clickSound();renderRadio();return}if(a==='collapse'){root.classList.remove('expanded');renderRadio();return}if(a==='settings'){openSettings();return}
     if(a==='prev'){cycle(-1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}if(a==='next'){cycle(1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';renderRadio(x||undefined);return}
     if(a==='scan'){noise(.4);root.classList.add('scanning');setTimeout(()=>{cycle(1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';root.classList.remove('scanning');renderRadio(x||undefined)},520);return}
-    if(a==='receive'){if(store.state.power){const x=await generate(store.state.channel,'manual');if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
+    if(a==='receive'){
+      if(isBusy()){if(canCancelGeneration())cancelActiveGeneration();return}
+      if(store.state.power){const items=await generate(requestChannels(),'manual');focusGenerated(items,root)}return
+    }
     if(a==='reroll'){if(store.state.power){const x=await rerollTodayIntel();if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
     if(a==='power'){store.state.power=!store.state.power;clickSound();save();renderRadio();return}if(a==='mute'){store.state.mute=!store.state.mute;save();renderRadio();return}if(a==='light'){store.state.light=!store.state.light;clickSound();save();renderRadio();return}if(a==='hold'){store.state.hold=!store.state.hold;clickSound();save();renderRadio();return}if(a==='log'){root.classList.toggle('log-open');clickSound();return}if(a==='tune'){noise(.08);b.style.setProperty('--rot',`${Math.round(Math.random()*90-45)}deg`);return}if(a==='volume'){store.state.volume=store.state.volume>=90?20:store.state.volume+10;save();renderRadio();clickSound();return}
   });
@@ -471,6 +509,8 @@ export function installUi(){
   try{RDOC.getElementById('swz-radio-style-v107')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v110')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v130')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v140')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v150')?.remove()}catch{}
   ensureStyle();
   closeSettings();
   setRenderer((type,payload)=>{if(type==='error'){const root=RDOC.getElementById(ROOT);if(root){root.querySelector('.mr87-headline').textContent='接收失败';root.querySelector('.mr87-transcript').textContent=String(payload||'未知错误')}}else renderRadio()});

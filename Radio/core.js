@@ -1,4 +1,4 @@
-export const VERSION='1.4.0';
+export const VERSION='1.6.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -9,7 +9,7 @@ export const channels={
 const KEY='muchi_radio_v3';
 const defaults={
   settings:{
-    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:140,
+    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:150,
     mainSampling:'inherit',proxySampling:'inherit',customSampling:'custom',
     auto:true,hours:6,dateRefresh:true,locationRefresh:true,initialBroadcast:true,autoChannel:'context',
     historyLimit:60,syncMvu:true,injectStory:true,applyEvents:true,syncClues:true,
@@ -18,7 +18,7 @@ const defaults={
   },
   state:{
     channel:'muchi',power:true,mute:false,light:true,hold:false,volume:48,
-    lastStamp:'',lastLocation:'',rotate:0,pendingStoryId:'',pendingStoryIds:[],displayMessageId:'',displayBroadcastId:''
+    lastStamp:'',lastLocation:'',rotate:0,pendingStoryId:'',pendingStoryIds:[],displayMessageId:'',displayBroadcastId:'',manualChannels:['muchi']
   },
   intel:{day:0,status:'idle',attempts:0,rerolls:0,baseline:null,directorBaseline:null,broadcastId:'',regions:[],lastStamp:''},
   director:{recent:[],arcs:[],serial:0},
@@ -26,10 +26,12 @@ const defaults={
 };
 
 export const store=structuredClone(defaults);
-let sessionKey='',busy=false,render=()=>{},audio=null;
+let sessionKey='',busy=false,render=()=>{},audio=null,activeRequest=null,requestSeq=0;
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const uniq=a=>[...new Set((Array.isArray(a)?a:[]).filter(Boolean).map(String))];
 export const isBusy=()=>busy;
+export const getActiveRequest=()=>activeRequest?{generationId:activeRequest.generationId,channels:[...(activeRequest.channels||[])],reason:activeRequest.reason,route:activeRequest.route,startedAt:activeRequest.startedAt,cancelled:!!activeRequest.cancelled}:null;
+export const canCancelGeneration=()=>!!(busy&&activeRequest?.generationId&&!activeRequest?.cancelled);
 export const setRenderer=fn=>{render=typeof fn==='function'?fn:()=>{}};
 export const getApiKey=()=>sessionKey||(store.settings.rememberKey?store.settings.apiKey:'');
 export const setApiKey=v=>{sessionKey=String(v||'')};
@@ -64,6 +66,22 @@ export function generationCapabilities(){
   return {proxyPresets:!!tavernHelperFn('getProxyPresetNames'),modelList:!!tavernHelperFn('getModelList')};
 }
 
+function requestError(message,code){const e=new Error(message);e.code=code;return e}
+function stopGenerationRequest(id){
+  const fn=tavernHelperFn('stopGenerationById');
+  if(!fn)return false;
+  try{return !!fn(String(id||''))}catch(e){console.warn('[MR-87] stopGenerationById',e);return false}
+}
+export function cancelActiveGeneration(){
+  const req=activeRequest;
+  if(!req||!busy||!req.generationId||req.cancelled)return false;
+  req.cancelled=true;
+  const stopped=stopGenerationRequest(req.generationId);
+  try{req.rejectCancel?.(requestError('用户取消了本次广播请求','MR87_CANCELLED'))}catch{}
+  render('busy',true);
+  return stopped||true;
+}
+
 export function load(){
   try{
     const root=getVariables?.({type:'script'})||{};
@@ -75,9 +93,12 @@ export function load(){
       if(!store.settings.proxyModel&&v.settings?.mode==='proxy')store.settings.proxyModel=legacyModel;
       if(typeof store.settings.proxyModelOverride!=='boolean')store.settings.proxyModelOverride=!!store.settings.proxyModel;
       if(Number(v.settings?.settingsRevision||0)<120&&Number(v.settings?.temperature)===.72)store.settings.temperature=.85;
-      store.settings.settingsRevision=140;delete store.settings.maxTokens;
+      store.settings.settingsRevision=150;delete store.settings.maxTokens;
+      const hadManualChannels=Array.isArray(v.state?.manualChannels);
       store.state={...defaults.state,...(v.state||{})};
       if(!Array.isArray(store.state.pendingStoryIds))store.state.pendingStoryIds=store.state.pendingStoryId?[store.state.pendingStoryId]:[];
+      store.state.manualChannels=hadManualChannels?uniq(store.state.manualChannels).filter(k=>channels[k]):[store.state.channel||'muchi'];
+      if(!store.state.manualChannels.length)store.state.manualChannels=[store.state.channel||'muchi'];
       store.intel={...defaults.intel,...(v.intel||{})};
       if(!['idle','no_intel','settled','exhausted'].includes(store.intel.status))store.intel.status='idle';
       if(!Array.isArray(store.intel.regions))store.intel.regions=[];
@@ -386,7 +407,7 @@ function applySampling(target,s,mode){const sm=samplingModeFor(s,mode)||'inherit
 function config(input,w,route='pure',plan=null){
   const keys=normalizeChannelKeys(input);if(!keys.length)throw Error('没有可生成的广播频道');
   const s=store.settings,intel=route==='settle'||route==='reroll',prompt=intel?settlementPrompt(keys,w,plan,route==='reroll'):purePrompt(keys,w,plan);
-  const c={user_input:prompt,ordered_prompts:[{role:'system',content:systemPrompt()},{role:'user',content:prompt}],should_silence:true,json_schema:intel?intelEnvelopeSchema:pureEnvelopeSchema,generation_id:`muchi-radio-${route}-${Date.now()}`};
+  const c={user_input:prompt,ordered_prompts:[{role:'system',content:systemPrompt()},{role:'user',content:prompt}],should_silence:true,json_schema:intel?intelEnvelopeSchema:pureEnvelopeSchema,generation_id:`muchi-radio-${route}-${Date.now()}-${++requestSeq}`};
   if(s.mode==='proxy'){
     const api={proxy_preset:String(s.proxyPreset||'').trim()};if(s.proxyModelOverride&&String(s.proxyModel||'').trim())api.model=String(s.proxyModel).trim();c.custom_api=applySampling(api,s,'proxy');
   }else if(s.mode==='custom'){
@@ -540,11 +561,28 @@ function pendingRecords(){
 function setPendingRecords(items){
   const ids=(items||[]).map(x=>x?.id).filter(Boolean);store.state.pendingStoryIds=ids;store.state.pendingStoryId=ids[0]||'';
 }
+
+async function awaitModelResponse(cfg,{keys=[],reason='',route='pure'}={}){
+  const req={generationId:String(cfg?.generation_id||''),channels:[...keys],reason,route,startedAt:Date.now(),cancelled:false,rejectCancel:null,timer:null};
+  activeRequest=req;render('busy',true);
+  const modelPromise=Promise.resolve().then(()=>generateRaw(cfg));
+  const cancelPromise=new Promise((_,reject)=>{req.rejectCancel=reject});
+  /* Safety net only: manual cancellation remains available immediately. 180s avoids a dead request holding MR-87 forever. */
+  const timeoutPromise=new Promise((_,reject)=>{req.timer=setTimeout(()=>{if(activeRequest!==req)return;req.cancelled=true;stopGenerationRequest(req.generationId);reject(requestError('广播请求超过180秒，已自动中止','MR87_TIMEOUT'))},180000)});
+  try{return await Promise.race([modelPromise,cancelPromise,timeoutPromise])}
+  finally{
+    if(req.timer)clearTimeout(req.timer);
+    req.rejectCancel=null;
+    if(activeRequest===req)activeRequest=null;
+    render('busy',true);
+  }
+}
 async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
   const w=await world(),route=generationRoute(keys,w,forcedRoute),cycle=ensureIntelCycle(w);
   if(route==='settle'&&!cycle.baseline){cycle.baseline=intelSnapshotFromWorld(w);cycle.directorBaseline=deepClone(store.director);cycle.lastStamp=stamp(w);save()}
   const directorPlan=createDirectorPlan(keys,w,route,directorOptions);
-  const envelope=parseEnvelope(await generateRaw(config(keys,w,route,directorPlan)),keys,w,route);
+  const cfg=config(keys,w,route,directorPlan);
+  const envelope=parseEnvelope(await awaitModelResponse(cfg,{keys,reason,route}),keys,w,route);
   const mapPayload=(route==='settle'||route==='reroll')?normalizeMapIntel(envelope.mapIntel,route):null;
   const items=envelope.broadcasts.map((raw,i)=>makeRecord(raw,keys[i],w,reason,i,route,directorPlan.byChannel[keys[i]]));
   const local=items.find(x=>x.channel==='muchi')||null;
@@ -580,7 +618,11 @@ export async function generate(input=store.state.channel,reason='manual'){
     store.state.lastStamp=items[0]?.worldStamp||stamp(out.w);store.state.lastLocation=out.w.location;setPendingRecords(items);save();render('all');
     if(reason==='manual')toastr?.success?.(items.length>1?`一次收到 ${items.length} 个频道的新广播`:`收到新的${channels[keys[0]].label}广播`);
     return wantsArray?items:(items[0]||null);
-  }catch(e){console.error('[MR-87]',e);render('error',e?.message||String(e));toastr?.error?.(`收音机生成失败：${e?.message||e}`);return wantsArray?[]:null}
+  }catch(e){
+    if(e?.code==='MR87_CANCELLED'){console.info('[MR-87] request cancelled');toastr?.info?.('已取消本次广播请求');return wantsArray?[]:null}
+    if(e?.code==='MR87_TIMEOUT'){console.warn('[MR-87] request timeout',e);render('error',e?.message||String(e));toastr?.warning?.(e?.message||'广播请求超时');return wantsArray?[]:null}
+    console.error('[MR-87]',e);render('error',e?.message||String(e));toastr?.error?.(`收音机生成失败：${e?.message||e}`);return wantsArray?[]:null
+  }
   finally{busy=false;render('busy',false)}
 }
 
@@ -602,7 +644,9 @@ export async function rerollTodayIntel(){
     if(store.state.displayBroadcastId===oldId)store.state.displayBroadcastId=item.id;
     setPendingRecords([item]);store.state.lastStamp=item.worldStamp;store.state.lastLocation=out.w.location;save();render('all');toastr?.success?.(`今日情报已重Roll · 第${store.intel.rerolls}次`);return item;
   }catch(e){
-    console.error('[MR-87 reroll]',e);if(currentSnapshot)try{await restoreVisibleSnapshot(currentSnapshot)}catch(_){}store.history=oldHistory;store.intel=oldIntel;store.director=oldDirector;save();render('all');toastr?.error?.(`重Roll失败：${e?.message||e}`);return null;
+    if(e?.code==='MR87_CANCELLED')console.info('[MR-87 reroll] cancelled');else console.error('[MR-87 reroll]',e);
+    if(currentSnapshot)try{await restoreVisibleSnapshot(currentSnapshot)}catch(_){}store.history=oldHistory;store.intel=oldIntel;store.director=oldDirector;save();render('all');
+    if(e?.code==='MR87_CANCELLED')toastr?.info?.('已取消重Roll，本次变化已回退');else if(e?.code==='MR87_TIMEOUT')toastr?.warning?.(e?.message||'重Roll请求超时，已回退');else toastr?.error?.(`重Roll失败：${e?.message||e}`);return null;
   }finally{busy=false;render('busy',false)}
 }
 
