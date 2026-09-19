@@ -2,8 +2,8 @@ import { store, channels, latest, byId, displayForMessage, switchChannel, cycle,
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v180';
-const STYLE='swz-radio-style-v180';
+const SETTINGS_FRAME='swz-radio-settings-frame-v190';
+const STYLE='swz-radio-style-v190';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -99,7 +99,7 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:50!important;right:-4px!important;bottom:calc(100% + 8px)!important;width:245px!important;max-width:70vw!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:10px!important;background:rgba(12,14,17,.97)!important;color:#c9c3bb!important;font-size:8px!important;line-height:1.65!important;text-align:left!important;white-space:normal!important;box-shadow:0 18px 42px rgba(0,0,0,.42)!important;opacity:0!important;pointer-events:none!important;transform:translateY(4px)!important;transition:.14s ease!important}
 #${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:none!important}
 
-/* v1.8.0 visual compact pass */
+/* v1.9.0 physical receiver rebuild */
 #${SETTINGS}.mrs-overlay{background:rgba(3,4,6,.34)!important;backdrop-filter:blur(3px)!important}
 #${SETTINGS} .mrs-panel{width:min(760px,calc(100vw - 34px))!important;height:min(650px,calc(100vh - 34px))!important;grid-template-rows:62px minmax(0,1fr) 52px!important;background:rgba(12,15,18,.34)!important;border-color:rgba(235,218,197,.22)!important}
 #${SETTINGS} .mrs-scene-image{opacity:.96!important;filter:saturate(.98) contrast(1.07) brightness(.95)!important;object-position:center 60%!important}
@@ -192,86 +192,90 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
     <div class="mr87-scene-vignette"></div>
 
     <header class="mr87-topline">
-      <div class="mr87-brand"><small>MR-87 / RUINS RECEIVER</small><b>废墟电波</b><span>暮迟市幸存者接收终端</span></div>
-      <div class="mr87-status"><i class="mr87-power-led"></i><span>正在接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button><button class="mr87-collapse-top" data-r-action="collapse" title="收起">⌄</button></div>
+      <div class="mr87-brand"><small>MR-87 / FIELD RECEIVER</small><b>废墟电波</b><span>暮迟市幸存者接收终端</span></div>
+      <div class="mr87-status"><i class="mr87-power-led"></i><span>仍在监听</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button><button class="mr87-collapse-top" data-r-action="collapse" title="收起">⌄</button></div>
     </header>
 
     <div class="mr87-workspace">
-      <aside class="mr87-left-rail">
-        <section class="mr87-panel mr87-channel-panel">
-          <div class="mr87-panel-head"><div><small>CHANNEL</small><b>频段选择</b></div><span>01 / 03</span></div>
-          <div class="mr87-presets">
-            <button data-r-channel="global"><span><em>SW</em><b>全球频道</b><small>世界仍在发声</small></span><i></i></button>
-            <button data-r-channel="china"><span><em>SW</em><b>中国频道</b><small>来自这片土地的回响</small></span><i></i></button>
-            <button data-r-channel="muchi"><span><em>FM</em><b>暮迟市频道</b><small>属于我们的频率</small></span><i></i></button>
+      <section class="mr87-radio-shell">
+        <div class="mr87-tuner-deck">
+          <div class="mr87-tuner-brand"><b>MR-87</b><small>EMERGENCY RECEIVER</small></div>
+          <div class="mr87-tuner-window">
+            <div class="mr87-scale-labels"><span>SW</span><span>MW</span><span>FM</span><span>87</span><span>92</span><span>98</span><span>104</span><span>108</span></div>
+            <div class="mr87-scale-track"><i></i></div>
+            <div class="mr87-readout"><span class="mr87-freq">88.7</span><span class="mr87-band">FM</span><small class="mr87-station">暮迟市 · MU CHI</small></div>
           </div>
-        </section>
+          <div class="mr87-tuner-signal"><div class="mr87-bars"></div><small class="mr87-signal-text">一般</small></div>
+        </div>
 
-        <section class="mr87-memory-panel" aria-hidden="true">
-          <div class="mr87-memory-copy"><small>87.4 MHz</small><b>暮色未散，频道仍在。</b><span>不同的坐标，同样的人。</span></div>
-        </section>
+        <div class="mr87-main-deck">
+          <aside class="mr87-speaker-side">
+            <div class="mr87-speaker-grille" aria-hidden="true">
+              <div class="mr87-speaker-badge"><span>MR-87</span><small>KEEP LISTENING</small></div>
+            </div>
+            <section class="mr87-channel-panel">
+              <div class="mr87-section-label"><span>频道预设</span><small>PRESET</small></div>
+              <div class="mr87-presets">
+                <button data-r-channel="global"><em>SW</em><b>全球</b><small>WORLD</small><i></i></button>
+                <button data-r-channel="china"><em>SW</em><b>中国</b><small>CHINA</small><i></i></button>
+                <button data-r-channel="muchi"><em>FM</em><b>暮迟</b><small>MUCHI</small><i></i></button>
+              </div>
+            </section>
+          </aside>
 
-        <section class="mr87-panel mr87-device-panel">
-          <div class="mr87-panel-head"><div><small>DEVICE</small><b>设备控制</b></div></div>
-          <div class="mr87-funcs">
-            <button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button>
-            <button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button>
-            <button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button>
-            <button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button>
-            <button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button>
-            <button class="mr87-utility" data-r-action="collapse"><span>↘</span><em>收起</em></button>
-          </div>
-        </section>
-      </aside>
+          <main class="mr87-screen-side">
+            <section class="mr87-broadcast-card">
+              <div class="mr87-screen-caption"><span>CURRENT BROADCAST</span><i>ON AIR</i></div>
+              <div class="mr87-meta"><span class="mr87-time">--</span><span class="mr87-source">暂无广播</span></div>
+              <div class="mr87-headline">等待接收</div>
+              <div class="mr87-transcript">当前频道还没有广播记录。</div>
+              <div class="mr87-impact"></div>
+              <div class="mr87-broadcast-signature"><span>MR-87 / STILL LISTENING</span><i></i></div>
+            </section>
 
-      <main class="mr87-center-stage">
-        <section class="mr87-broadcast-card">
-          <div class="mr87-screen-top">
-            <div class="mr87-frequency-block"><small>CURRENT BROADCAST</small><div><span class="mr87-freq">88.7</span><span class="mr87-band">FM</span></div><span class="mr87-station">暮迟市 · MU CHI</span></div>
-            <div class="mr87-signal"><div class="mr87-bars"></div><small class="mr87-signal-text">一般</small></div>
-          </div>
-          <div class="mr87-meta"><span class="mr87-time">--</span><span class="mr87-source">暂无广播</span></div>
-          <div class="mr87-headline">等待接收</div>
-          <div class="mr87-transcript">当前频道还没有广播记录。</div>
-          <div class="mr87-impact"></div>
-          <div class="mr87-broadcast-signature"><span>MR-87 / STILL LISTENING</span><i></i></div>
-        </section>
+            <section class="mr87-request-panel">
+              <div class="mr87-request-copy"><span>本次拉取</span><button class="mr87-help" type="button" data-help data-tip="这里只决定下一次手动接收要生成哪些频道；可同时选择多个频道，所选频道仍合并成一次 API 请求，不改变当前正在收听的频段。" aria-label="手动拉取频道说明">?</button></div>
+              <div class="mr87-request-channels"><button type="button" data-r-request-channel="global" aria-pressed="false"><i></i>全球</button><button type="button" data-r-request-channel="china" aria-pressed="false"><i></i>中国</button><button type="button" data-r-request-channel="muchi" aria-pressed="true"><i></i>暮迟</button></div>
+              <button class="mr87-receive" data-r-action="receive">接收新播报</button>
+            </section>
 
-        <section class="mr87-panel mr87-request-panel">
-          <div class="mr87-panel-head"><div><small>MANUAL REQUEST</small><b>本次拉取</b></div><button class="mr87-help" type="button" data-help data-tip="这里只决定下一次手动接收要生成哪些频道；可同时选择多个频道，所选频道仍合并成一次 API 请求，不改变当前正在收听的频段。" aria-label="手动拉取频道说明">?</button></div>
-          <div class="mr87-request-pick"><div class="mr87-request-channels"><button type="button" data-r-request-channel="global" aria-pressed="false"><i></i>全球</button><button type="button" data-r-request-channel="china" aria-pressed="false"><i></i>中国</button><button type="button" data-r-request-channel="muchi" aria-pressed="true"><i></i>暮迟</button></div><button class="mr87-receive" data-r-action="receive">接收新播报</button></div>
-        </section>
+            <section class="mr87-intel-card">
+              <div class="mr87-intel-copy"><small>MAP INTEL</small><b>地图情报</b><span data-r-intel-status>今日未结算</span></div>
+              <button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button>
+              <button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button>
+            </section>
+          </main>
+        </div>
 
-        <section class="mr87-panel mr87-nav-panel">
-          <div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调频</small></div>
-          <div class="mr87-keys"><button data-r-action="prev">← 上一条</button><button data-r-action="scan">扫频</button><button data-r-action="next">下一条 →</button></div>
-          <div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 <span class="mr87-volume-num">48</span></small></div>
-        </section>
-      </main>
+        <div class="mr87-control-deck">
+          <section class="mr87-device-panel">
+            <div class="mr87-funcs">
+              <button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button>
+              <button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button>
+              <button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button>
+              <button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button>
+              <button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button>
+            </div>
+          </section>
 
-      <aside class="mr87-right-rail">
-        <section class="mr87-panel mr87-intel-card">
-          <div class="mr87-panel-head"><div><small>MAP INTEL</small><b>地图情报联动</b></div><button class="mr87-help" type="button" data-help data-tip="地图显示的是玩家已知情报。每天正常结算最多一次；普通广播不会反复改地图，只有重Roll可覆盖今日情报。" aria-label="地图情报说明">?</button></div>
-          <div class="mr87-intel-state"><span>今日状态</span><b data-r-intel-status>今日未结算</b></div>
-          <div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div>
-        </section>
+          <section class="mr87-nav-panel">
+            <div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调谐</small></div>
+            <div class="mr87-keys"><button data-r-action="prev">←</button><button data-r-action="scan">扫频</button><button data-r-action="next">→</button></div>
+            <div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 <span class="mr87-volume-num">48</span></small></div>
+          </section>
 
-        <section class="mr87-panel mr87-shortcuts">
-          <button data-r-action="log"><span>广播记录</span><small>最近接收的内容</small><i>›</i></button>
-          <button data-r-action="settings"><span>生成与显示设置</span><small>API · 自动接收 · 联动</small><i>›</i></button>
-        </section>
-
-        <section class="mr87-signal-card" aria-hidden="true">
-          <div class="mr87-wave-line large"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>仍有人回应。</span>
-        </section>
-      </aside>
+          <section class="mr87-shortcuts">
+            <button data-r-action="log"><span>广播记录</span><i>›</i></button>
+            <button data-r-action="settings"><span>设置</span><i>›</i></button>
+          </section>
+        </div>
+      </section>
     </div>
 
     <div class="mr87-log-drawer"><div class="mr87-log-head"><b>广播记录</b><span>最近接收</span></div><div class="mr87-log-list"></div></div>
     <footer class="mr87-foot"><span>MR-87 RADIO · 87.4 MHz</span><span class="mr87-version">有些声音，依然穿过废墟抵达你。</span></footer>
   </div>
 </section>`;}
-
 function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-hidden="true" style="display:none"><div class="mrs-panel">
   <img class="mrs-scene-image" src="${radioBackdropUrl()}" alt="" aria-hidden="true"><div class="mrs-scene-shade"></div>
   <div class="mrs-title"><div class="mrs-title-copy"><span class="mrs-title-kicker">MR-87 / RECEIVER CONFIGURATION</span><b>收音机设置</b><span>广播生成、自动接收、剧情联动与设备显示</span></div><button class="mrs-close" type="button" data-s-action="close">×</button></div>
@@ -467,7 +471,7 @@ function renderSettings(){
 function readSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;stashSamplingState(r);const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
   store.settings.mode=selectedMode(r);store.settings.proxyPreset=v('proxyPreset');store.settings.proxyModelOverride=c('proxyModelOverride');store.settings.proxyModel=v('proxyModel').trim();store.settings.apiUrl=v('apiUrl').trim();setApiKey(v('apiKey'));store.settings.rememberKey=c('rememberKey');store.settings.customModel=v('customModel').trim();store.settings.model=store.settings.mode==='custom'?store.settings.customModel:store.settings.proxyModel;store.settings.source=v('source')||'openai';
-  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=180;
+  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=190;
   store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,80);store.settings.diversity=['steady','natural','rich','chaotic'].includes(v('diversity'))?v('diversity'):'natural';store.settings.songRequests=c('songRequests');store.settings.storyArcs=c('storyArcs');store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
   if(store.settings.mode==='custom'){if(!store.settings.apiUrl)throw Error('独立 API 需要填写 API URL');if(!store.settings.customModel)throw Error('独立 API 需要选择或填写模型')}
   if(store.settings.mode==='proxy'&&!store.settings.proxyPreset)throw Error('代理预设模式需要选择一个代理预设');
@@ -488,7 +492,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.8.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.9.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
@@ -577,15 +581,7 @@ function bindSettings(){
 }
 
 export function installUi(){
-  try{RDOC.getElementById('swz-radio-style')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v105')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v106')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v107')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v110')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v130')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v140')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v150')?.remove()}catch{}
-  try{RDOC.getElementById('swz-radio-style-v160')?.remove()}catch{}
+  try{RDOC.querySelectorAll('link[id^="swz-radio-style"],style[id^="swz-radio-style"]').forEach(el=>el.remove())}catch{}
   ensureStyle();
   closeSettings();
   setRenderer((type,payload)=>{if(type==='error'){const root=RDOC.getElementById(ROOT);if(root){root.querySelector('.mr87-headline').textContent='接收失败';root.querySelector('.mr87-transcript').textContent=String(payload||'未知错误')}}else renderRadio()});
