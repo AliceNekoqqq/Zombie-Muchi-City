@@ -2,8 +2,8 @@ import { store, channels, latest, byId, displayForMessage, switchChannel, cycle,
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v160';
-const STYLE='swz-radio-style-v160';
+const SETTINGS_FRAME='swz-radio-settings-frame-v170';
+const STYLE='swz-radio-style-v170';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -28,71 +28,96 @@ function styleUrl(){return new URL('./style.css',import.meta.url).href;}
 function radioBackdropUrl(){return new URL('../Assets/MR87_backdrop.png',import.meta.url).href;}
 function ensureStyle(){if(RDOC.getElementById(STYLE))return;const link=RDOC.createElement('link');link.id=STYLE;link.rel='stylesheet';link.href=styleUrl();RDOC.head.appendChild(link)}
 function settingsCss(){return `
-#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:18px!important;overflow:auto!important;background:rgba(4,6,8,.68)!important;color:#eee9e2!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important;backdrop-filter:blur(8px)!important}
+#${SETTINGS}.mrs-overlay{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:18px!important;overflow:hidden!important;background:rgba(3,4,6,.48)!important;color:#f0ece6!important;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif!important;line-height:normal!important;text-align:left!important;pointer-events:auto!important;backdrop-filter:blur(5px)!important}
 #${SETTINGS}.mrs-overlay.mrs-open{display:flex!important}
 #${SETTINGS},#${SETTINGS} *{box-sizing:border-box!important}
-#${SETTINGS} .mrs-panel{position:relative!important;isolation:isolate!important;width:min(700px,calc(100vw - 44px))!important;max-height:calc(100vh - 44px)!important;display:grid!important;grid-template-rows:64px 44px minmax(0,1fr) 56px!important;overflow:hidden!important;border:1px solid rgba(235,216,194,.18)!important;border-radius:22px!important;background:linear-gradient(180deg,rgba(12,15,18,.96),rgba(8,11,13,.97))!important;color:#eee9e2!important;box-shadow:0 30px 90px rgba(0,0,0,.54),inset 0 1px 0 rgba(255,255,255,.035)!important}
-#${SETTINGS} .mrs-panel::before{content:""!important;position:absolute!important;inset:0!important;z-index:-2!important;background-image:linear-gradient(90deg,rgba(7,9,11,.96) 0%,rgba(7,9,11,.86) 48%,rgba(7,9,11,.72) 100%),url("${radioBackdropUrl()}")!important;background-size:cover!important;background-position:center 60%!important;filter:saturate(.68) brightness(.70)!important;opacity:.58!important}
-#${SETTINGS} .mrs-panel::after{content:""!important;position:absolute!important;inset:0!important;z-index:-1!important;background:radial-gradient(440px 220px at 12% 0,rgba(214,160,110,.08),transparent 70%),radial-gradient(380px 220px at 95% 18%,rgba(155,201,198,.06),transparent 72%)!important;pointer-events:none!important}
-#${SETTINGS} .mrs-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:0 14px 0 18px!important;border-bottom:1px solid rgba(235,216,194,.12)!important;background:rgba(8,11,13,.72)!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important;backdrop-filter:blur(10px)!important}
+#${SETTINGS} button,#${SETTINGS} input,#${SETTINGS} select,#${SETTINGS} textarea{font:inherit!important}
+#${SETTINGS} .mrs-panel{position:relative!important;isolation:isolate!important;width:min(860px,calc(100vw - 36px))!important;height:min(720px,calc(100vh - 36px))!important;max-height:calc(100vh - 36px)!important;display:grid!important;grid-template-rows:72px minmax(0,1fr) 58px!important;overflow:hidden!important;border:1px solid rgba(233,217,196,.18)!important;border-radius:26px!important;background:rgba(11,13,16,.26)!important;color:#f0ece6!important;box-shadow:0 34px 100px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05)!important}
+#${SETTINGS} .mrs-scene-image{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center 56%!important;z-index:-3!important;opacity:.74!important;filter:saturate(.82) contrast(1.03) brightness(.78)!important;pointer-events:none!important}
+#${SETTINGS} .mrs-scene-shade{position:absolute!important;inset:0!important;z-index:-2!important;background:linear-gradient(90deg,rgba(8,10,13,.83) 0 23%,rgba(7,9,12,.46) 46%,rgba(8,10,13,.72) 100%),linear-gradient(180deg,rgba(7,9,11,.25),rgba(7,9,11,.62))!important;pointer-events:none!important}
+#${SETTINGS} .mrs-title{position:relative!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;padding:0 18px 0 22px!important;border-bottom:1px solid rgba(235,218,197,.14)!important;background:rgba(10,12,15,.54)!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important;backdrop-filter:blur(14px)!important}
 #${SETTINGS}.mrs-dragging .mrs-title{cursor:grabbing!important}
-#${SETTINGS} .mrs-title b{font-family:"Noto Serif SC","Songti SC",serif!important;font-size:17px!important;font-weight:520!important;letter-spacing:.09em!important;color:#f2ebe3!important}
-#${SETTINGS} .mrs-title span{display:block!important;margin-top:4px!important;color:#888b8b!important;font-size:8px!important;letter-spacing:.06em!important}
-#${SETTINGS} .mrs-close{appearance:none!important;width:36px!important;height:36px!important;padding:0!important;border:1px solid rgba(235,216,194,.14)!important;border-radius:10px!important;background:rgba(18,21,24,.66)!important;color:#bbb5ad!important;font-size:20px!important;line-height:34px!important;text-align:center!important;cursor:pointer!important}
-#${SETTINGS} .mrs-close:hover{border-color:rgba(197,141,151,.30)!important;color:#ead4d9!important;background:rgba(70,39,47,.30)!important}
-#${SETTINGS} .mrs-tabs{display:flex!important;gap:5px!important;padding:6px 10px!important;border-bottom:1px solid rgba(235,216,194,.09)!important;background:rgba(8,11,13,.58)!important;overflow-x:auto!important;backdrop-filter:blur(8px)!important}
-#${SETTINGS} .mrs-tabs button{appearance:none!important;flex:1 0 72px!important;border:1px solid transparent!important;border-radius:9px!important;background:transparent!important;color:#828788!important;font-size:9px!important;cursor:pointer!important;transition:.16s ease!important}
-#${SETTINGS} .mrs-tabs button:hover{color:#d6cec5!important;background:rgba(255,255,255,.025)!important}
-#${SETTINGS} .mrs-tabs button.active{border-color:rgba(155,201,198,.18)!important;background:rgba(155,201,198,.08)!important;color:#e8efeb!important;box-shadow:inset 0 -2px 0 rgba(155,201,198,.42)!important}
-#${SETTINGS} .mrs-content{min-height:0!important;overflow:auto!important;padding:12px!important;overscroll-behavior:contain!important;scrollbar-width:thin!important}
-#${SETTINGS} .mrs-page{display:none!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#${SETTINGS} .mrs-title-copy{min-width:0!important}
+#${SETTINGS} .mrs-title-kicker{display:block!important;margin-bottom:5px!important;color:#a8947d!important;font-size:7px!important;letter-spacing:.22em!important;text-transform:uppercase!important}
+#${SETTINGS} .mrs-title b{display:block!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:18px!important;font-weight:520!important;letter-spacing:.08em!important;color:#f4eee7!important}
+#${SETTINGS} .mrs-title span:not(.mrs-title-kicker){display:block!important;margin-top:4px!important;color:#9a9a96!important;font-size:8px!important;letter-spacing:.04em!important}
+#${SETTINGS} .mrs-close{appearance:none!important;width:38px!important;height:38px!important;padding:0!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:12px!important;background:rgba(14,17,20,.50)!important;color:#c9c1b7!important;font-size:19px!important;line-height:36px!important;text-align:center!important;cursor:pointer!important;backdrop-filter:blur(8px)!important}
+#${SETTINGS} .mrs-close:hover{border-color:rgba(190,142,151,.33)!important;background:rgba(91,54,63,.28)!important;color:#f0dfe3!important}
+#${SETTINGS} .mrs-workspace{min-height:0!important;display:grid!important;grid-template-columns:176px minmax(0,1fr)!important}
+#${SETTINGS} .mrs-side{min-height:0!important;display:flex!important;flex-direction:column!important;padding:16px 12px!important;border-right:1px solid rgba(235,218,197,.12)!important;background:rgba(8,10,13,.44)!important;backdrop-filter:blur(12px)!important}
+#${SETTINGS} .mrs-side-brand{padding:3px 8px 14px!important;border-bottom:1px solid rgba(235,218,197,.10)!important}
+#${SETTINGS} .mrs-side-brand strong{display:block!important;font-family:"Noto Serif SC","Songti SC",serif!important;color:#e8dfd4!important;font-size:12px!important;font-weight:520!important;letter-spacing:.08em!important}
+#${SETTINGS} .mrs-side-brand small{display:block!important;margin-top:5px!important;color:#747b7c!important;font-size:7px!important;line-height:1.6!important;letter-spacing:.10em!important}
+#${SETTINGS} .mrs-tabs{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;margin-top:14px!important;padding:0!important;overflow:visible!important;background:none!important;border:0!important}
+#${SETTINGS} .mrs-tabs button{appearance:none!important;width:100%!important;min-height:42px!important;padding:0 12px!important;border:1px solid transparent!important;border-radius:11px!important;background:transparent!important;color:#92918d!important;text-align:left!important;font-size:9px!important;letter-spacing:.04em!important;cursor:pointer!important;transition:.16s ease!important}
+#${SETTINGS} .mrs-tabs button:hover{color:#e1dad1!important;background:rgba(255,255,255,.035)!important}
+#${SETTINGS} .mrs-tabs button.active{border-color:rgba(170,204,199,.18)!important;background:linear-gradient(90deg,rgba(77,107,105,.27),rgba(77,107,105,.08))!important;color:#edf2ee!important;box-shadow:inset 2px 0 0 #94bbb8!important}
+#${SETTINGS} .mrs-side-note{margin-top:auto!important;padding:12px 10px 4px!important;color:#7d7f7d!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:8px!important;line-height:1.8!important;letter-spacing:.04em!important}
+#${SETTINGS} .mrs-side-note::before{content:""!important;display:block!important;width:26px!important;height:1px!important;margin-bottom:10px!important;background:#a97d58!important;opacity:.55!important}
+#${SETTINGS} .mrs-content{min-height:0!important;overflow:auto!important;padding:16px!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;background:rgba(10,12,15,.18)!important}
+#${SETTINGS} .mrs-page{display:none!important;grid-template-columns:1fr 1fr!important;gap:12px!important}
 #${SETTINGS} .mrs-page.active{display:grid!important}
-#${SETTINGS} .mrs-card{padding:14px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:14px!important;background:linear-gradient(180deg,rgba(18,21,24,.72),rgba(10,13,15,.74))!important;color:#eee9e2!important;backdrop-filter:blur(9px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.02)!important}
+#${SETTINGS} .mrs-card{padding:16px!important;border:1px solid rgba(235,218,197,.12)!important;border-radius:16px!important;background:linear-gradient(180deg,rgba(17,20,24,.66),rgba(10,13,16,.62))!important;color:#eee8df!important;backdrop-filter:blur(14px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
 #${SETTINGS} .mrs-card.mrs-full{grid-column:1/-1!important}
-#${SETTINGS} .mrs-card h3{display:flex!important;align-items:center!important;margin:0 0 12px!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:12px!important;font-weight:560!important;letter-spacing:.06em!important;color:#eee7de!important}
-#${SETTINGS} .mrs-card h3::before{content:""!important;width:2px!important;height:12px!important;margin-right:8px!important;border-radius:2px!important;background:linear-gradient(180deg,#d6a06e,#c58d97)!important}
-#${SETTINGS} .mrs-card p{margin:7px 0 0!important;color:#83898a!important;font-size:8px!important;line-height:1.7!important}
-#${SETTINGS} .mrs-card label{display:block!important;margin-top:10px!important;color:#969895!important;font-size:8px!important}
-#${SETTINGS} .mrs-card input:not([type=checkbox]):not([type=range]),#${SETTINGS} .mrs-card select,#${SETTINGS} .mrs-card textarea{appearance:auto!important;width:100%!important;margin-top:6px!important;padding:9px 10px!important;border:1px solid rgba(235,216,194,.12)!important;border-radius:9px!important;background:rgba(5,8,10,.72)!important;color:#ded8d0!important;outline:none!important;font-size:9px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.015)!important}
-#${SETTINGS} .mrs-card input:focus,#${SETTINGS} .mrs-card select:focus,#${SETTINGS} .mrs-card textarea:focus{border-color:rgba(155,201,198,.30)!important;box-shadow:0 0 0 2px rgba(155,201,198,.06)!important}
-#${SETTINGS} .mrs-card textarea{min-height:72px!important;resize:vertical!important;line-height:1.65!important}
-#${SETTINGS} .mrs-card input[type=range]{width:100%!important;margin-top:7px!important;accent-color:#9bc9c6!important}
-#${SETTINGS} .mrs-check{display:flex!important;align-items:center!important;gap:7px!important;line-height:1.5!important}
-#${SETTINGS} .mrs-check input{margin:0!important;accent-color:#9bc9c6!important}
-#${SETTINGS} .mrs-actions{margin-top:10px!important}
-#${SETTINGS} .mrs-actions button,#${SETTINGS} .mrs-footer button{appearance:none!important;padding:8px 11px!important;border:1px solid rgba(235,216,194,.13)!important;border-radius:9px!important;background:rgba(19,22,24,.72)!important;color:#bdb7af!important;font-size:8px!important;cursor:pointer!important}
-#${SETTINGS} .mrs-actions button:hover,#${SETTINGS} .mrs-footer button:hover{border-color:rgba(216,160,110,.25)!important;color:#eee5da!important;background:rgba(31,29,29,.78)!important}
-#${SETTINGS} .mrs-footer{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;padding:9px 12px!important;border-top:1px solid rgba(235,216,194,.10)!important;background:rgba(8,11,13,.72)!important;backdrop-filter:blur(10px)!important}
-#${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(155,201,198,.24)!important;background:rgba(59,96,93,.28)!important;color:#e3eeea!important}
-#${SETTINGS} .mrs-mode-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin-top:8px!important}
+#${SETTINGS} .mrs-card h3{display:flex!important;align-items:center!important;gap:7px!important;margin:0 0 13px!important;font-family:"Noto Serif SC","Songti SC",serif!important;font-size:12px!important;font-weight:560!important;letter-spacing:.06em!important;color:#f0e7dc!important}
+#${SETTINGS} .mrs-card h3::before{content:""!important;width:2px!important;height:13px!important;border-radius:2px!important;background:linear-gradient(180deg,#c79a70,#9b6d75)!important}
+#${SETTINGS} .mrs-card p{margin:8px 0 0!important;color:#878d8d!important;font-size:8px!important;line-height:1.75!important}
+#${SETTINGS} .mrs-card label{display:block!important;margin-top:11px!important;color:#a09d98!important;font-size:8px!important;line-height:1.45!important}
+#${SETTINGS} .mrs-card input:not([type=checkbox]):not([type=range]),#${SETTINGS} .mrs-card select,#${SETTINGS} .mrs-card textarea{appearance:auto!important;width:100%!important;margin-top:6px!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.13)!important;border-radius:10px!important;background:rgba(5,7,9,.63)!important;color:#e2dcd4!important;outline:none!important;font-size:9px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.015)!important}
+#${SETTINGS} .mrs-card input:focus,#${SETTINGS} .mrs-card select:focus,#${SETTINGS} .mrs-card textarea:focus{border-color:rgba(148,187,184,.34)!important;box-shadow:0 0 0 2px rgba(148,187,184,.07)!important}
+#${SETTINGS} .mrs-card textarea{min-height:78px!important;resize:vertical!important;line-height:1.7!important}
+#${SETTINGS} .mrs-card input[type=range]{width:100%!important;margin-top:8px!important;accent-color:#94bbb8!important}
+#${SETTINGS} .mrs-check{display:flex!important;align-items:center!important;gap:8px!important;line-height:1.5!important}
+#${SETTINGS} .mrs-check input{margin:0!important;accent-color:#94bbb8!important}
+#${SETTINGS} .mrs-card em{font-style:normal!important;color:#d3b18d!important}
+#${SETTINGS} .mrs-actions{margin-top:11px!important}
+#${SETTINGS} .mrs-actions button,#${SETTINGS} .mrs-footer button,#${SETTINGS} .mrs-mini-btn{appearance:none!important;padding:9px 12px!important;border:1px solid rgba(235,218,197,.14)!important;border-radius:10px!important;background:rgba(18,21,24,.60)!important;color:#c8c0b6!important;font-size:8px!important;cursor:pointer!important}
+#${SETTINGS} .mrs-actions button:hover,#${SETTINGS} .mrs-footer button:hover,#${SETTINGS} .mrs-mini-btn:hover{border-color:rgba(199,154,112,.30)!important;background:rgba(34,31,30,.72)!important;color:#f1e7db!important}
+#${SETTINGS} .mrs-footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:9px 14px!important;border-top:1px solid rgba(235,218,197,.11)!important;background:rgba(8,10,13,.55)!important;backdrop-filter:blur(14px)!important}
+#${SETTINGS} .mrs-footer-note{color:#777e7f!important;font-size:7px!important;letter-spacing:.08em!important}
+#${SETTINGS} .mrs-footer-actions{display:flex!important;gap:8px!important}
+#${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(148,187,184,.26)!important;background:linear-gradient(180deg,rgba(62,94,91,.46),rgba(25,40,40,.60))!important;color:#ecf2ee!important}
+#${SETTINGS} .mrs-mode-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:9px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-mode-option{position:relative!important;display:block!important;margin:0!important;cursor:pointer!important}
 #${SETTINGS} .mrs-mode-option input{position:absolute!important;opacity:0!important;pointer-events:none!important}
-#${SETTINGS} .mrs-mode-option span{display:block!important;min-height:76px!important;padding:11px 12px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:11px!important;background:rgba(6,9,11,.60)!important;transition:.16s ease!important}
-#${SETTINGS} .mrs-mode-option b{display:block!important;color:#cbc4bc!important;font-size:10px!important;font-weight:600!important}
-#${SETTINGS} .mrs-mode-option small{display:block!important;margin-top:6px!important;color:#767e80!important;font-size:7px!important;line-height:1.55!important}
-#${SETTINGS} .mrs-mode-option input:checked+span{border-color:rgba(155,201,198,.30)!important;background:rgba(58,92,90,.22)!important;box-shadow:inset 0 0 0 1px rgba(155,201,198,.05)!important}
-#${SETTINGS} .mrs-mode-option input:checked+span b{color:#e7efeb!important}
-#${SETTINGS} .mrs-engine-shell{margin-top:10px!important;padding:11px!important;border:1px solid rgba(235,216,194,.08)!important;border-radius:11px!important;background:rgba(5,8,10,.55)!important}
-#${SETTINGS} .mrs-engine{display:none!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+#${SETTINGS} .mrs-mode-option span{display:block!important;min-height:86px!important;padding:12px!important;border:1px solid rgba(235,218,197,.11)!important;border-radius:13px!important;background:rgba(7,9,11,.48)!important;transition:.16s ease!important}
+#${SETTINGS} .mrs-mode-option b{display:block!important;color:#d4ccc2!important;font-size:10px!important;font-weight:600!important}
+#${SETTINGS} .mrs-mode-option small{display:block!important;margin-top:6px!important;color:#7f8686!important;font-size:7px!important;line-height:1.6!important}
+#${SETTINGS} .mrs-mode-option.active span{border-color:rgba(148,187,184,.29)!important;background:linear-gradient(180deg,rgba(52,78,78,.34),rgba(16,24,26,.44))!important;box-shadow:inset 0 0 0 1px rgba(148,187,184,.04)!important}
+#${SETTINGS} .mrs-engine-shell{margin-top:12px!important}
+#${SETTINGS} .mrs-engine{display:none!important;grid-template-columns:1fr 1fr!important;gap:10px!important;padding:12px!important;border:1px solid rgba(235,218,197,.09)!important;border-radius:13px!important;background:rgba(6,8,10,.38)!important}
 #${SETTINGS} .mrs-engine.active{display:grid!important}
 #${SETTINGS} .mrs-engine .mrs-wide{grid-column:1/-1!important}
-#${SETTINGS} .mrs-source-note{display:flex!important;align-items:flex-start!important;gap:8px!important;padding:9px 10px!important;border:1px solid rgba(155,201,198,.10)!important;border-radius:9px!important;background:rgba(44,70,69,.13)!important;color:#858f8e!important;font-size:8px!important;line-height:1.6!important}
-#${SETTINGS} .mrs-source-note strong{color:#b9cbc7!important;white-space:nowrap!important}
-#${SETTINGS} .mrs-field-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important;align-items:end!important}
-#${SETTINGS} .mrs-field-row>label{margin-top:0!important}
-#${SETTINGS} .mrs-mini-btn{appearance:none!important;min-width:86px!important;height:33px!important;padding:0 10px!important;border:1px solid rgba(235,216,194,.13)!important;border-radius:9px!important;background:rgba(19,22,24,.75)!important;color:#bdb7af!important;font-size:8px!important;cursor:pointer!important}
-#${SETTINGS} .mrs-mini-btn:hover{border-color:rgba(155,201,198,.24)!important;color:#e3eeea!important}
-#${SETTINGS} .mrs-mini-btn:disabled{opacity:.45!important;cursor:default!important}
-#${SETTINGS} .mrs-status{min-height:16px!important;margin-top:6px!important;color:#767f80!important;font-size:7px!important;line-height:1.5!important}
-#${SETTINGS} .mrs-status.ok{color:#91b8ac!important}#${SETTINGS} .mrs-status.warn{color:#c4a776!important}
-#${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin-top:8px!important}
-#${SETTINGS} .mrs-model-pick-row select{cursor:pointer!important}
+#${SETTINGS} .mrs-source-note{display:grid!important;grid-template-columns:auto 1fr!important;gap:11px!important;align-items:start!important;padding:11px!important;border:1px dashed rgba(148,187,184,.17)!important;border-radius:10px!important;background:rgba(148,187,184,.045)!important}
+#${SETTINGS} .mrs-source-note strong{color:#d9e6e1!important;font-size:9px!important}.mrs-source-note span{color:#888f8e!important;font-size:8px!important;line-height:1.6!important}
+#${SETTINGS} .mrs-field-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:end!important}
+#${SETTINGS} .mrs-status{padding:8px 10px!important;border-radius:9px!important;background:rgba(255,255,255,.025)!important;color:#858b8a!important;font-size:8px!important;line-height:1.5!important}
+#${SETTINGS} .mrs-status.ok{color:#9fc5bd!important;background:rgba(72,111,104,.10)!important}#${SETTINGS} .mrs-status.warn{color:#d4a788!important;background:rgba(121,78,49,.10)!important}
+#${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-hidden{display:none!important}
-#${SETTINGS} .mrs-badge{display:inline-flex!important;align-items:center!important;min-height:20px!important;padding:2px 7px!important;border:1px solid rgba(235,216,194,.10)!important;border-radius:999px!important;background:rgba(8,11,13,.62)!important;color:#8d9291!important;font-size:7px!important}
-#${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;margin-left:5px!important;border:1px solid rgba(235,216,194,.16)!important;border-radius:50%!important;background:rgba(8,11,13,.74)!important;color:#a7a19a!important;font-size:8px!important;font-style:normal!important;cursor:help!important;vertical-align:middle!important;outline:none!important}
-#${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:30!important;left:50%!important;bottom:calc(100% + 8px)!important;width:228px!important;max-width:70vw!important;padding:9px 10px!important;border:1px solid rgba(235,216,194,.15)!important;border-radius:9px!important;background:rgba(10,13,15,.98)!important;color:#c7c2bb!important;font-size:8px!important;line-height:1.6!important;box-shadow:0 14px 32px rgba(0,0,0,.38)!important;transform:translate(-50%,4px)!important;opacity:0!important;pointer-events:none!important;transition:.14s ease!important;white-space:normal!important}
-#${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:translate(-50%,0)!important}
-@media(max-width:720px){#${SETTINGS}.mrs-overlay{padding:0!important;background:rgba(4,6,8,.84)!important}#${SETTINGS} .mrs-panel{width:100vw!important;max-height:100vh!important;height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:58px 42px minmax(0,1fr) 54px!important}#${SETTINGS} .mrs-title{padding-left:13px!important;cursor:default!important}#${SETTINGS} .mrs-title b{font-size:14px!important}#${SETTINGS} .mrs-title span{font-size:7px!important}#${SETTINGS} .mrs-content{padding:8px!important}#${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}#${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine.active{grid-template-columns:1fr!important}#${SETTINGS} .mrs-engine .mrs-wide{grid-column:auto!important}#${SETTINGS} .mrs-sampling-fields{grid-template-columns:1fr!important}}
+#${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;padding:0!important;border:1px solid rgba(235,218,197,.18)!important;border-radius:50%!important;background:rgba(8,10,13,.65)!important;color:#aaa39b!important;font-style:normal!important;font-size:8px!important;cursor:help!important}
+#${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:50!important;right:-4px!important;bottom:calc(100% + 8px)!important;width:245px!important;max-width:70vw!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:10px!important;background:rgba(12,14,17,.97)!important;color:#c9c3bb!important;font-size:8px!important;line-height:1.65!important;text-align:left!important;white-space:normal!important;box-shadow:0 18px 42px rgba(0,0,0,.42)!important;opacity:0!important;pointer-events:none!important;transform:translateY(4px)!important;transition:.14s ease!important}
+#${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:none!important}
+@media(max-width:760px){
+  #${SETTINGS}.mrs-overlay{padding:0!important;background:rgba(3,4,6,.78)!important}
+  #${SETTINGS} .mrs-panel{width:100vw!important;height:100vh!important;max-height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:62px minmax(0,1fr) 54px!important}
+  #${SETTINGS} .mrs-title{padding:0 12px 0 14px!important;cursor:default!important}
+  #${SETTINGS} .mrs-title b{font-size:15px!important}
+  #${SETTINGS} .mrs-workspace{display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important}
+  #${SETTINGS} .mrs-side{display:block!important;padding:8px!important;border-right:0!important;border-bottom:1px solid rgba(235,218,197,.11)!important;background:rgba(8,10,13,.62)!important}
+  #${SETTINGS} .mrs-side-brand,#${SETTINGS} .mrs-side-note{display:none!important}
+  #${SETTINGS} .mrs-tabs{display:flex!important;gap:5px!important;margin:0!important;overflow-x:auto!important}
+  #${SETTINGS} .mrs-tabs button{flex:1 0 68px!important;min-height:36px!important;padding:0 8px!important;text-align:center!important}
+  #${SETTINGS} .mrs-tabs button.active{box-shadow:inset 0 -2px 0 #94bbb8!important}
+  #${SETTINGS} .mrs-content{padding:9px!important}
+  #${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}
+  #${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}
+  #${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}
+  #${SETTINGS} .mrs-engine.active{grid-template-columns:1fr!important}
+  #${SETTINGS} .mrs-engine .mrs-wide{grid-column:auto!important}
+  #${SETTINGS} .mrs-footer-note{display:none!important}
+  #${SETTINGS} .mrs-footer{justify-content:flex-end!important}
+}
 `; }
 function getSettingsFrame(){return RDOC.getElementById(SETTINGS_FRAME)}
 function getSettingsDoc(){try{return getSettingsFrame()?.contentDocument||null}catch{return null}}
@@ -137,99 +162,127 @@ function getMessageContentHost(mes){return mes?.querySelector('.mes_text')||mes?
 
 function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria-label="MR-87便携收音机">
   <div class="mr87-brief" data-r-action="toggle" role="button" tabindex="0">
+    <img class="mr87-brief-bg" src="${radioBackdropUrl()}" alt="" aria-hidden="true">
+    <div class="mr87-brief-shade"></div>
     <div class="mr87-brief-mark"><i class="mr87-power-led"></i><b>MR-87</b></div>
     <div class="mr87-brief-station"><span class="mr87-brief-channel">暮迟市</span><small class="mr87-brief-freq">FM 88.7</small></div>
     <div class="mr87-brief-copy"><strong class="mr87-brief-headline">等待接收</strong><span class="mr87-brief-summary">当前没有新的广播。</span></div>
     <div class="mr87-brief-side"><span class="mr87-brief-signal">▮▮▮▯</span><time class="mr87-brief-time">--:--</time><button data-r-action="toggle" class="mr87-expand">展开</button></div>
   </div>
   <div class="mr87-drawer">
-    <div class="mr87-topline">
-      <div class="mr87-brand"><b>MR-87 · 废墟电波</b><span>MUCHI CITY / SAME FREQUENCY, DIFFERENT TOMORROW</span></div>
-      <div class="mr87-status"><i class="mr87-power-led"></i><span>正在接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button></div>
-    </div>
-    <div class="mr87-body">
-      <aside class="mr87-speaker-side">
-        <div class="mr87-side-label"><b>频段选择</b><small>CHANNEL</small></div>
-        <div class="mr87-presets"><button data-r-channel="global">SW · 全球</button><button data-r-channel="china">SW · 中国</button><button data-r-channel="muchi">FM · 暮迟市</button></div>
-        <div class="mr87-speaker"></div>
-        <div class="mr87-meter"><span></span><span></span><span></span><span></span><span></span><i></i></div>
-        <div class="mr87-speaker-label">MR-87 · RECEIVER UNIT</div>
-        <div class="mr87-side-quote">“无线电没有熄灭，就还不算世界的尽头。”<small>STILL HERE · 87.4</small></div>
+    <img class="mr87-scene-bg" src="${radioBackdropUrl()}" alt="" aria-hidden="true">
+    <div class="mr87-scene-vignette"></div>
+    <header class="mr87-topline">
+      <div class="mr87-brand"><small>RUINS SIGNAL / PRIVATE RECEIVER</small><b>MR-87 · 废墟电波</b><span>有些声音穿过废墟，只为了告诉你：还有人在。</span></div>
+      <div class="mr87-status"><i class="mr87-power-led"></i><span>正在接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button><button class="mr87-collapse-top" data-r-action="collapse" title="收起">⌄</button></div>
+    </header>
+
+    <div class="mr87-workspace">
+      <aside class="mr87-left-rail">
+        <section class="mr87-panel mr87-channel-panel">
+          <div class="mr87-panel-head"><div><small>CHANNEL</small><b>频段选择</b></div><span>01 / 03</span></div>
+          <div class="mr87-presets">
+            <button data-r-channel="global"><span><em>SW</em><b>全球频道</b><small>世界仍在发声</small></span><i></i></button>
+            <button data-r-channel="china"><span><em>SW</em><b>中国频道</b><small>来自这片土地的回响</small></span><i></i></button>
+            <button data-r-channel="muchi"><span><em>FM</em><b>暮迟市频道</b><small>属于我们的频率</small></span><i></i></button>
+          </div>
+        </section>
+        <section class="mr87-panel mr87-memory-panel">
+          <div class="mr87-memory-copy"><small>87.4 MHz</small><b>“暮色未散，频道仍在。”</b><span>不同的坐标，同样的人。</span></div>
+          <div class="mr87-wave-line" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </section>
+        <section class="mr87-panel mr87-device-panel">
+          <div class="mr87-panel-head"><div><small>DEVICE</small><b>设备控制</b></div></div>
+          <div class="mr87-funcs">
+            <button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button>
+            <button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button>
+            <button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button>
+            <button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button>
+            <button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button>
+            <button class="mr87-utility" data-r-action="collapse"><span>↘</span><em>收起</em></button>
+          </div>
+        </section>
       </aside>
-      <div class="mr87-console">
-        <div class="mr87-screen">
-          <div class="mr87-screen-top"><div><span class="mr87-freq">88.7</span><span class="mr87-band">FM</span><small class="mr87-station">暮迟市</small></div><div class="mr87-signal"><div class="mr87-bars"></div><small class="mr87-signal-text">一般</small></div></div>
+
+      <main class="mr87-center-stage">
+        <section class="mr87-broadcast-card">
+          <div class="mr87-screen-top">
+            <div class="mr87-frequency-block"><small>CURRENT BROADCAST</small><div><span class="mr87-freq">88.7</span><span class="mr87-band">FM</span></div><span class="mr87-station">暮迟市 · MU CHI</span></div>
+            <div class="mr87-signal"><div class="mr87-bars"></div><small class="mr87-signal-text">一般</small></div>
+          </div>
           <div class="mr87-meta"><span class="mr87-time">--</span><span class="mr87-source">暂无广播</span></div>
-          <div class="mr87-headline">等待接收</div><div class="mr87-transcript">当前频道还没有广播记录。</div><div class="mr87-impact"></div>
-        </div>
-        <div class="mr87-request-pick"><span>本次拉取</span><div class="mr87-request-channels"><button type="button" data-r-request-channel="global" aria-pressed="false">全球</button><button type="button" data-r-request-channel="china" aria-pressed="false">中国</button><button type="button" data-r-request-channel="muchi" aria-pressed="true">暮迟</button></div><button class="mr87-help" type="button" data-help data-tip="这里只决定下一次手动接收要生成哪些频道；可同时选择多个频道，所选频道仍合并成一次 API 请求，不会改变当前正在收听的频段。" aria-label="手动拉取频道说明">?</button></div>
-        <div class="mr87-controls"><div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调频</small></div><div class="mr87-keys"><button data-r-action="prev">◀</button><button data-r-action="scan">扫频</button><button data-r-action="next">▶</button><button class="mr87-receive" data-r-action="receive">接收新播报</button></div><div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 · <span class="mr87-volume-num">48</span></small></div></div>
-        <div class="mr87-intel-tools"><div class="mr87-intel-state"><span>地图情报</span><b data-r-intel-status>今日未结算</b></div><div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div></div>
-        <div class="mr87-funcs"><button class="mr87-cosmetic" data-r-action="power"><span>◈</span><em>电源</em></button><button class="mr87-cosmetic" data-r-action="mute"><span>◌</span><em>静音</em></button><button class="mr87-cosmetic" data-r-action="light"><span>✦</span><em>背光</em></button><button class="mr87-cosmetic" data-r-action="hold"><span>⟐</span><em>锁定</em></button><button class="mr87-utility" data-r-action="log"><span>☰</span><em>记录</em></button><button class="mr87-utility" data-r-action="collapse"><span>↘</span><em>收起</em></button></div>
-      </div>
+          <div class="mr87-headline">等待接收</div>
+          <div class="mr87-transcript">当前频道还没有广播记录。</div>
+          <div class="mr87-impact"></div>
+          <div class="mr87-broadcast-signature"><span>MR-87 / STILL LISTENING</span><i></i></div>
+        </section>
+
+        <section class="mr87-panel mr87-request-panel">
+          <div class="mr87-panel-head"><div><small>MANUAL REQUEST</small><b>本次拉取</b></div><button class="mr87-help" type="button" data-help data-tip="这里只决定下一次手动接收要生成哪些频道；可同时选择多个频道，所选频道仍合并成一次 API 请求，不改变当前正在收听的频段。" aria-label="手动拉取频道说明">?</button></div>
+          <div class="mr87-request-pick"><div class="mr87-request-channels"><button type="button" data-r-request-channel="global" aria-pressed="false"><i></i>全球</button><button type="button" data-r-request-channel="china" aria-pressed="false"><i></i>中国</button><button type="button" data-r-request-channel="muchi" aria-pressed="true"><i></i>暮迟</button></div><button class="mr87-receive" data-r-action="receive">接收新播报</button></div>
+        </section>
+
+        <section class="mr87-panel mr87-nav-panel">
+          <div class="mr87-knob-wrap"><button class="mr87-knob mr87-tune" data-r-action="tune"></button><small>调频</small></div>
+          <div class="mr87-keys"><button data-r-action="prev">← 上一条</button><button data-r-action="scan">扫频</button><button data-r-action="next">下一条 →</button></div>
+          <div class="mr87-knob-wrap"><button class="mr87-knob mr87-volume" data-r-action="volume"></button><small>音量 <span class="mr87-volume-num">48</span></small></div>
+        </section>
+      </main>
+
+      <aside class="mr87-right-rail">
+        <section class="mr87-panel mr87-intel-card">
+          <div class="mr87-panel-head"><div><small>MAP INTEL</small><b>地图情报联动</b></div><button class="mr87-help" type="button" data-help data-tip="地图显示的是玩家已知情报。每天正常结算最多一次；普通广播不会反复改地图，只有重Roll可覆盖今日情报。" aria-label="地图情报说明">?</button></div>
+          <div class="mr87-intel-state"><span>今日状态</span><b data-r-intel-status>今日未结算</b></div>
+          <div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div>
+        </section>
+        <section class="mr87-panel mr87-signal-card">
+          <div class="mr87-panel-head"><div><small>SIGNAL</small><b>接收状态</b></div></div>
+          <div class="mr87-signal-visual"><div class="mr87-wave-line large"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>信号穿过噪声，但仍有人回应。</span></div>
+        </section>
+        <section class="mr87-panel mr87-shortcuts">
+          <button data-r-action="log"><span>广播记录</span><small>最近接收的内容</small><i>›</i></button>
+          <button data-r-action="settings"><span>生成与显示设置</span><small>API · 自动接收 · 联动</small><i>›</i></button>
+        </section>
+      </aside>
     </div>
+
     <div class="mr87-log-drawer"><div class="mr87-log-head"><b>广播记录</b><span>最近接收</span></div><div class="mr87-log-list"></div></div>
-    <div class="mr87-foot"><span>MR-87 RADIO · STILL LISTENING</span><span class="mr87-version">暮迟未散 · 频道仍在</span></div>
+    <footer class="mr87-foot"><span>MR-87 RADIO · 87.4 MHz</span><span class="mr87-version">有些声音，依然穿过废墟抵达你。</span></footer>
   </div>
 </section>`;}
 
 function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-hidden="true" style="display:none"><div class="mrs-panel">
-  <div class="mrs-title"><div><b>MR-87 · 收音机设置</b><span>广播生成、自动接收与剧情联动</span></div><button class="mrs-close" type="button" data-s-action="close">×</button></div>
-  <nav class="mrs-tabs"><button type="button" data-s-tab="general" class="active">常规</button><button type="button" data-s-tab="engine">生成 API</button><button type="button" data-s-tab="auto">自动</button><button type="button" data-s-tab="story">剧情</button><button type="button" data-s-tab="display">显示</button></nav>
-  <div class="mrs-content">
-    <div class="mrs-page active" data-s-page="general">
-      <section class="mrs-card"><h3>内容控制 <i class="mrs-help" tabindex="0" data-tip="随机性由脚本先抽取事件类型、区域、稀有度、播报形式、可靠度、人味插播和连续事件，再交给模型写成广播；不是单纯提高温度。">?</i></h3><label>广播多样性<select name="diversity"><option value="steady">稳健 · 更多连续性，稀有事件很少</option><option value="natural">自然 · 推荐</option><option value="rich">丰富 · 更积极换事件与形式</option><option value="chaotic">混乱 · 更多传闻与非常规频段</option></select></label><label>人味插播概率 <em data-s-value="civilian">34%</em><input name="civilian" type="range" min="0" max="80"></label><label class="mrs-check"><input name="songRequests" type="checkbox">允许幸存者点歌 / 留言 <i class="mrs-help" tabindex="0" data-tip="点歌会随机出现歌名、歌手、点播对象和留言，也可能使用虚构歌曲；它属于生活内容，不会单独改变地图情报。">?</i></label><label class="mrs-check"><input name="storyArcs" type="checkbox">允许连续事件弧 <i class="mrs-help" tabindex="0" data-tip="部分广播会在未来1—3个游戏日继续发展，例如车队失联、供电恢复、寻宠后续；不会保证每次都续写。">?</i></label><label>整体紧张度<select name="tension"><option value="calm">生活化 / 克制</option><option value="balanced">平衡</option><option value="tense">偏紧张</option></select></label><label class="mrs-check"><input name="repeatGuard" type="checkbox">近期广播重复保护</label><label>附加偏好<textarea name="extra"></textarea></label></section>
-      <section class="mrs-card"><h3>记录与同步</h3><label>历史保留条数<input name="historyLimit" type="number" min="10" max="200"></label><label class="mrs-check"><input name="syncMvu" type="checkbox">最新摘要同步回 MVU</label><p>完整历史保存在脚本变量；MVU只保留三个频道的最新摘要与最近世界事件。</p></section>
-    </div>
-    <div class="mrs-page" data-s-page="engine">
-      <section class="mrs-card mrs-full">
-        <h3>生成来源 <i class="mrs-help" tabindex="0" data-tip="主预设直接跟随酒馆；代理预设使用酒馆已保存的代理连接；独立 API 只给 MR-87 使用，不改变正文模型。">?</i></h3>
-        <div class="mrs-mode-grid">
-          <label class="mrs-mode-option"><input type="radio" name="mode" value="main"><span><b>主预设</b><small>完全跟随当前酒馆连接与模型。最省心。</small></span></label>
-          <label class="mrs-mode-option"><input type="radio" name="mode" value="proxy"><span><b>代理预设</b><small>使用酒馆中已保存的代理预设，不暴露 URL / Key。</small></span></label>
-          <label class="mrs-mode-option"><input type="radio" name="mode" value="custom"><span><b>独立 API</b><small>只给 MR-87 使用，不改变主剧情 API。</small></span></label>
-        </div>
-        <div class="mrs-engine-shell">
-          <div class="mrs-engine" data-engine="main">
-            <div class="mrs-source-note mrs-wide"><strong>跟随酒馆</strong><span>URL、Key、模型全部使用当前酒馆设置，因此这些字段会自动隐藏。默认也继承主预设采样参数。</span></div>
+  <img class="mrs-scene-image" src="${radioBackdropUrl()}" alt="" aria-hidden="true"><div class="mrs-scene-shade"></div>
+  <div class="mrs-title"><div class="mrs-title-copy"><span class="mrs-title-kicker">MR-87 / RECEIVER CONFIGURATION</span><b>收音机设置</b><span>广播生成、自动接收、剧情联动与设备显示</span></div><button class="mrs-close" type="button" data-s-action="close">×</button></div>
+  <div class="mrs-workspace">
+    <aside class="mrs-side">
+      <div class="mrs-side-brand"><strong>废墟电波 · 工作台</strong><small>不是所有声音都需要相信。<br>但每一个回应，都说明还有人活着。</small></div>
+      <nav class="mrs-tabs"><button type="button" data-s-tab="general" class="active">内容与随机性</button><button type="button" data-s-tab="engine">生成 API</button><button type="button" data-s-tab="auto">自动接收</button><button type="button" data-s-tab="story">剧情联动</button><button type="button" data-s-tab="display">显示与设备</button></nav>
+      <div class="mrs-side-note">让工具服务于氛围，而不是抢走故事本身。</div>
+    </aside>
+    <main class="mrs-content">
+      <div class="mrs-page active" data-s-page="general">
+        <section class="mrs-card"><h3>内容导演 <i class="mrs-help" tabindex="0" data-tip="随机性由脚本先抽取事件类型、区域、稀有度、播报形式、可靠度、人味插播和连续事件，再交给模型写成广播；不是单纯提高温度。">?</i></h3><label>广播多样性<select name="diversity"><option value="steady">稳健 · 更多连续性，稀有事件很少</option><option value="natural">自然 · 推荐</option><option value="rich">丰富 · 更积极换事件与形式</option><option value="chaotic">混乱 · 更多传闻与非常规频段</option></select></label><label>人味插播概率 <em data-s-value="civilian">34%</em><input name="civilian" type="range" min="0" max="80"></label><label class="mrs-check"><input name="songRequests" type="checkbox">允许幸存者点歌 / 留言 <i class="mrs-help" tabindex="0" data-tip="点歌会随机出现歌名、歌手、点播对象和留言，也可能使用虚构歌曲；它属于生活内容，不会单独改变地图情报。">?</i></label><label class="mrs-check"><input name="storyArcs" type="checkbox">允许连续事件弧 <i class="mrs-help" tabindex="0" data-tip="部分广播会在未来1—3个游戏日继续发展，例如车队失联、供电恢复、寻宠后续；不会保证每次都续写。">?</i></label><label>整体紧张度<select name="tension"><option value="calm">生活化 / 克制</option><option value="balanced">平衡</option><option value="tense">偏紧张</option></select></label><label class="mrs-check"><input name="repeatGuard" type="checkbox">近期广播重复保护</label><label>附加偏好<textarea name="extra"></textarea></label></section>
+        <section class="mrs-card"><h3>记录与同步</h3><label>历史保留条数<input name="historyLimit" type="number" min="10" max="200"></label><label class="mrs-check"><input name="syncMvu" type="checkbox">最新摘要同步回 MVU</label><p>完整历史保存在脚本变量；MVU只保留三个频道的最新摘要与最近世界事件。</p></section>
+      </div>
+      <div class="mrs-page" data-s-page="engine">
+        <section class="mrs-card mrs-full">
+          <h3>生成来源 <i class="mrs-help" tabindex="0" data-tip="主预设直接跟随酒馆；代理预设使用酒馆已保存的代理连接；独立 API 只给 MR-87 使用，不改变正文模型。">?</i></h3>
+          <div class="mrs-mode-grid"><label class="mrs-mode-option"><input type="radio" name="mode" value="main"><span><b>主预设</b><small>完全跟随当前酒馆连接与模型。最省心。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="proxy"><span><b>代理预设</b><small>使用酒馆中已保存的代理预设，不暴露 URL / Key。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="custom"><span><b>独立 API</b><small>只给 MR-87 使用，不改变主剧情 API。</small></span></label></div>
+          <div class="mrs-engine-shell">
+            <div class="mrs-engine" data-engine="main"><div class="mrs-source-note mrs-wide"><strong>跟随酒馆</strong><span>URL、Key、模型全部使用当前酒馆设置，因此这些字段会自动隐藏。默认也继承主预设采样参数。</span></div></div>
+            <div class="mrs-engine" data-engine="proxy"><div class="mrs-field-row mrs-wide"><label>代理预设<select name="proxyPreset"></select></label><button type="button" class="mrs-mini-btn" data-s-action="refresh-proxies">刷新预设</button></div><div class="mrs-status mrs-wide" data-proxy-status></div><label class="mrs-check mrs-wide"><input name="proxyModelOverride" type="checkbox">覆盖代理预设中的模型</label><label class="mrs-wide" data-proxy-model-row>模型<input name="proxyModel" placeholder="仅在确实需要覆盖时填写"></label></div>
+            <div class="mrs-engine mrs-engine-custom" data-engine="custom"><label>API 类型<select name="source"><option value="openai">OpenAI / OpenAI兼容</option><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option><option value="claude">Claude</option><option value="makersuite">Google MakerSuite</option><option value="mistralai">Mistral</option><option value="groq">Groq</option><option value="custom">Custom</option></select></label><label>API URL<input name="apiUrl" placeholder="https://api.example.com/v1"></label><label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="不会发送给主剧情"></label><label class="mrs-check"><input name="rememberKey" type="checkbox">在本角色脚本变量中保存 Key</label><div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" placeholder="手填模型，或先拉取列表"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div><label class="mrs-wide mrs-model-pick-row mrs-hidden" data-model-pick-row>已拉取模型<select name="modelPick"><option value="">选择模型…</option></select></label><div class="mrs-status mrs-wide" data-model-status>拉取成功后会出现可下拉选择的模型列表；也可以直接手填。</div></div>
           </div>
-          <div class="mrs-engine" data-engine="proxy">
-            <div class="mrs-field-row mrs-wide"><label>代理预设<select name="proxyPreset"></select></label><button type="button" class="mrs-mini-btn" data-s-action="refresh-proxies">刷新预设</button></div>
-            <div class="mrs-status mrs-wide" data-proxy-status></div>
-            <label class="mrs-check mrs-wide"><input name="proxyModelOverride" type="checkbox">覆盖代理预设中的模型</label>
-            <label class="mrs-wide" data-proxy-model-row>模型<input name="proxyModel" placeholder="仅在确实需要覆盖时填写"></label>
-          </div>
-          <div class="mrs-engine mrs-engine-custom" data-engine="custom">
-            <label>API 类型<select name="source"><option value="openai">OpenAI / OpenAI兼容</option><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option><option value="claude">Claude</option><option value="makersuite">Google MakerSuite</option><option value="mistralai">Mistral</option><option value="groq">Groq</option><option value="custom">Custom</option></select></label>
-            <label>API URL<input name="apiUrl" placeholder="https://api.example.com/v1"></label>
-            <label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="不会发送给主剧情"></label>
-            <label class="mrs-check"><input name="rememberKey" type="checkbox">在本角色脚本变量中保存 Key</label>
-            <div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" placeholder="手填模型，或先拉取列表"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div>
-            <label class="mrs-wide mrs-model-pick-row mrs-hidden" data-model-pick-row>已拉取模型<select name="modelPick"><option value="">选择模型…</option></select></label>
-            <div class="mrs-status mrs-wide" data-model-status>拉取成功后会出现可下拉选择的模型列表；也可以直接手填。</div>
-          </div>
-        </div>
-      </section>
-      <section class="mrs-card mrs-full">
-        <h3>采样参数</h3>
-        <label class="mrs-check"><input name="inheritSampling" type="checkbox"><span data-sampling-label>沿用来源采样参数</span></label>
-        <div class="mrs-sampling-fields" data-sampling-fields>
-          <label>温度 <em data-s-value="temperature">0.85</em><input name="temperature" type="range" min="0" max="1.5" step="0.01"></label>
-        </div>
-        <p data-sampling-help></p>
-      </section>
-    </div>
-    <div class="mrs-page" data-s-page="auto">
-      <section class="mrs-card mrs-full"><h3>自动接收 <i class="mrs-help" tabindex="0" data-tip="满足首次、跨日期、换地点或经过指定时间等条件时自动接收；同一轮需要多个频道会合并为一次 API 请求。">?</i></h3><label class="mrs-check"><input name="auto" type="checkbox">开启自动广播</label><label class="mrs-check"><input name="initialBroadcast" type="checkbox">首次生成前接收本地广播</label><label>世界时间至少经过（小时）<input name="hours" type="number" min="1" max="48"></label><label class="mrs-check"><input name="dateRefresh" type="checkbox">跨日期刷新</label><label class="mrs-check"><input name="locationRefresh" type="checkbox">换地点后优先刷新本地台</label><label>自动频道<select name="autoChannel"><option value="context">按情境选择</option><option value="current">只刷新当前频道</option><option value="rotate">三频道轮换</option></select></label></section>
-    </div>
-    <div class="mrs-page" data-s-page="story">
-      <section class="mrs-card mrs-full"><h3>剧情联动</h3><label class="mrs-check"><input name="injectStory" type="checkbox">广播先生成并注入本轮正文上下文 <i class="mrs-help" tabindex="0" data-tip="把刚收到的广播摘要一次性注入下一轮正文，使人物能自然听见；不会把整段广播反复塞进上下文。">?</i></label><label class="mrs-check"><input name="applyEvents" type="checkbox">暮迟市广播联动地图情报 <i class="mrs-help" tabindex="0" data-tip="地图显示的是玩家已知情报。每天最多自动结算一次，最多尝试两次；结算后普通广播只生成文本，除非主动重Roll。">?</i></label><label class="mrs-check"><input name="syncClues" type="checkbox">允许广播成为富余支线线索</label><p>广播不会直接确认同伴最终位置，也不会泄露楚泽暗线。地图情报与真实地点机制分层：重Roll只覆盖情报，不逆转正文里已经发生的搜刮、清剿等事实。</p></section>
-    </div>
-    <div class="mrs-page" data-s-page="display">
-      <section class="mrs-card mrs-full"><h3>设备显示</h3><label class="mrs-check"><input name="sound" type="checkbox">按键与调频音效</label><label>静电强度 <em data-s-value="static">32%</em><input name="static" type="range" min="0" max="100"></label><label>设备缩放 <em data-s-value="scale">100%</em><input name="scale" type="range" min="80" max="120"></label><label class="mrs-check"><input name="inline" type="checkbox">在最新角色回复顶部显示广播</label><label class="mrs-check"><input name="showIdle" type="checkbox">没有新广播时也保留入口</label></section>
-    </div>
+        </section>
+        <section class="mrs-card mrs-full"><h3>采样参数</h3><label class="mrs-check"><input name="inheritSampling" type="checkbox"><span data-sampling-label>沿用来源采样参数</span></label><div class="mrs-sampling-fields" data-sampling-fields><label>温度 <em data-s-value="temperature">0.85</em><input name="temperature" type="range" min="0" max="1.5" step="0.01"></label></div><p data-sampling-help></p></section>
+      </div>
+      <div class="mrs-page" data-s-page="auto"><section class="mrs-card mrs-full"><h3>自动接收 <i class="mrs-help" tabindex="0" data-tip="满足首次、跨日期、换地点或经过指定时间等条件时自动接收；同一轮需要多个频道会合并为一次 API 请求。">?</i></h3><label class="mrs-check"><input name="auto" type="checkbox">开启自动广播</label><label class="mrs-check"><input name="initialBroadcast" type="checkbox">首次生成前接收本地广播</label><label>世界时间至少经过（小时）<input name="hours" type="number" min="1" max="48"></label><label class="mrs-check"><input name="dateRefresh" type="checkbox">跨日期刷新</label><label class="mrs-check"><input name="locationRefresh" type="checkbox">换地点后优先刷新本地台</label><label>自动频道<select name="autoChannel"><option value="context">按情境选择</option><option value="current">只刷新当前频道</option><option value="rotate">三频道轮换</option></select></label></section></div>
+      <div class="mrs-page" data-s-page="story"><section class="mrs-card mrs-full"><h3>剧情联动</h3><label class="mrs-check"><input name="injectStory" type="checkbox">广播先生成并注入本轮正文上下文 <i class="mrs-help" tabindex="0" data-tip="把刚收到的广播摘要一次性注入下一轮正文，使人物能自然听见；不会把整段广播反复塞进上下文。">?</i></label><label class="mrs-check"><input name="applyEvents" type="checkbox">暮迟市广播联动地图情报 <i class="mrs-help" tabindex="0" data-tip="地图显示的是玩家已知情报。每天最多自动结算一次，最多尝试两次；结算后普通广播只生成文本，除非主动重Roll。">?</i></label><label class="mrs-check"><input name="syncClues" type="checkbox">允许广播成为富余支线线索</label><p>广播不会直接确认同伴最终位置，也不会泄露楚泽暗线。地图情报与真实地点机制分层：重Roll只覆盖情报，不逆转正文里已经发生的搜刮、清剿等事实。</p></section></div>
+      <div class="mrs-page" data-s-page="display"><section class="mrs-card mrs-full"><h3>设备显示</h3><label class="mrs-check"><input name="sound" type="checkbox">按键与调频音效</label><label>静电强度 <em data-s-value="static">32%</em><input name="static" type="range" min="0" max="100"></label><label>设备缩放 <em data-s-value="scale">100%</em><input name="scale" type="range" min="80" max="120"></label><label class="mrs-check"><input name="inline" type="checkbox">在最新角色回复顶部显示广播</label><label class="mrs-check"><input name="showIdle" type="checkbox">没有新广播时也保留入口</label></section></div>
+    </main>
   </div>
-  <div class="mrs-footer"><button data-s-action="clear-history">清空广播历史</button><button class="mrs-primary" data-s-action="save">保存设置</button></div>
+  <div class="mrs-footer"><span class="mrs-footer-note">MR-87 · STILL LISTENING</span><div class="mrs-footer-actions"><button data-s-action="clear-history">清空广播历史</button><button class="mrs-primary" data-s-action="save">保存设置</button></div></div>
 </div></div>`;}
 
 function activateSettingsTab(name='general'){
@@ -414,7 +467,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.6.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.7.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
@@ -511,6 +564,7 @@ export function installUi(){
   try{RDOC.getElementById('swz-radio-style-v130')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v140')?.remove()}catch{}
   try{RDOC.getElementById('swz-radio-style-v150')?.remove()}catch{}
+  try{RDOC.getElementById('swz-radio-style-v160')?.remove()}catch{}
   ensureStyle();
   closeSettings();
   setRenderer((type,payload)=>{if(type==='error'){const root=RDOC.getElementById(ROOT);if(root){root.querySelector('.mr87-headline').textContent='接收失败';root.querySelector('.mr87-transcript').textContent=String(payload||'未知错误')}}else renderRadio()});
