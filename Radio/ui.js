@@ -23,6 +23,20 @@ let modelCache=[],modelCacheUrl='';
 
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const transcriptHtml=value=>{
+  const raw=String(value??'').replace(/\r\n?/g,'\n').trim();
+  if(!raw)return '';
+  const parts=raw.split(/(?=【(?:幸存者频段|点歌留言|短讯)】)/g);
+  return parts.map(part=>{
+    const m=part.match(/^【(幸存者频段|点歌留言|短讯)】\s*/);
+    const body=(m?part.slice(m[0].length):part).trim();
+    const safe=esc(body).replace(/\n/g,'<br>');
+    if(!m)return `<div class="mr87-transcript-main">${safe}</div>`;
+    const type=m[1],cls=type==='幸存者频段'?'survivor':type==='点歌留言'?'song':'brief';
+    const icon=type==='幸存者频段'?'◉':type==='点歌留言'?'♪':'◆';
+    return `<section class="mr87-human-band ${cls}"><div class="mr87-human-band-head"><span>${icon}</span><b>${esc(type)}</b><i>INTERCEPT</i></div><div class="mr87-human-band-body">${safe}</div></section>`;
+  }).join('');
+};
 
 function styleUrl(){return new URL('./style.css',import.meta.url).href;}
 function radioBackdropUrl(){return new URL('../Assets/MR87_backdrop.png',import.meta.url).href;}
@@ -99,7 +113,7 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:50!important;right:-4px!important;bottom:calc(100% + 8px)!important;width:245px!important;max-width:70vw!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:10px!important;background:rgba(12,14,17,.97)!important;color:#c9c3bb!important;font-size:8px!important;line-height:1.65!important;text-align:left!important;white-space:normal!important;box-shadow:0 18px 42px rgba(0,0,0,.42)!important;opacity:0!important;pointer-events:none!important;transform:translateY(4px)!important;transition:.14s ease!important}
 #${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:none!important}
 
-/* v1.9.1 physical receiver rebuild */
+/* v1.9.3 physical receiver rebuild */
 #${SETTINGS}.mrs-overlay{background:rgba(3,4,6,.34)!important;backdrop-filter:blur(3px)!important}
 #${SETTINGS} .mrs-panel{width:min(760px,calc(100vw - 34px))!important;height:min(650px,calc(100vh - 34px))!important;grid-template-rows:62px minmax(0,1fr) 52px!important;background:rgba(12,15,18,.34)!important;border-color:rgba(235,218,197,.22)!important}
 #${SETTINGS} .mrs-scene-image{opacity:.96!important;filter:saturate(.98) contrast(1.07) brightness(.95)!important;object-position:center 60%!important}
@@ -363,7 +377,7 @@ function renderRadio(preferred){
     root.querySelector('.mr87-bars').innerHTML=bars('断续');root.querySelector('.mr87-signal-text').textContent='无信号';root.querySelector('.mr87-time').textContent='--';root.querySelector('.mr87-source').textContent='暂无广播';root.querySelector('.mr87-headline').textContent='等待接收';root.querySelector('.mr87-transcript').textContent='当前频道还没有广播记录。';if(impact)impact.innerHTML='';
   }else{
     root.querySelector('.mr87-brief-headline').textContent=item.headline||item.category||'广播更新';root.querySelector('.mr87-brief-summary').textContent=item.summary||'';root.querySelector('.mr87-brief-time').textContent=(item.eventTime||'').slice(-5);root.querySelector('.mr87-brief-signal').textContent=glyph(item.signal);
-    root.querySelector('.mr87-bars').innerHTML=bars(item.signal);root.querySelector('.mr87-signal-text').textContent=item.signal;root.querySelector('.mr87-time').textContent=item.eventTime;root.querySelector('.mr87-source').textContent=item.source;root.querySelector('.mr87-headline').textContent=item.headline;root.querySelector('.mr87-transcript').textContent=item.transcript||item.summary;
+    root.querySelector('.mr87-bars').innerHTML=bars(item.signal);root.querySelector('.mr87-signal-text').textContent=item.signal;root.querySelector('.mr87-time').textContent=item.eventTime;root.querySelector('.mr87-source').textContent=item.source;root.querySelector('.mr87-headline').textContent=item.headline;root.querySelector('.mr87-transcript').innerHTML=transcriptHtml(item.transcript||item.summary);
     const tags=[];if(item.appliedImpact?.length)tags.push(`<span>态势变化 · ${esc(item.worldEvent?.summary||item.appliedImpact.join('；'))}</span>`);if(item.appliedClue)tags.push(`<span>模糊线索 · ${esc(item.appliedClue)}</span>`);if(impact)impact.innerHTML=tags.join('');
   }
   root.querySelector('.mr87-expand').textContent=root.classList.contains('expanded')?'收起':'展开';renderLog();
@@ -492,7 +506,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.9.1] 设置界面打开失败',err);
+    console.error('[MR-87 v1.9.3] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
