@@ -1,4 +1,4 @@
-export const VERSION='1.7.0';
+export const VERSION='1.8.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -9,7 +9,7 @@ export const channels={
 const KEY='muchi_radio_v3';
 const defaults={
   settings:{
-    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:150,
+    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:180,
     mainSampling:'inherit',proxySampling:'inherit',customSampling:'custom',
     auto:true,hours:6,dateRefresh:true,locationRefresh:true,initialBroadcast:true,autoChannel:'context',
     historyLimit:60,syncMvu:true,injectStory:true,applyEvents:true,syncClues:true,
@@ -93,7 +93,7 @@ export function load(){
       if(!store.settings.proxyModel&&v.settings?.mode==='proxy')store.settings.proxyModel=legacyModel;
       if(typeof store.settings.proxyModelOverride!=='boolean')store.settings.proxyModelOverride=!!store.settings.proxyModel;
       if(Number(v.settings?.settingsRevision||0)<120&&Number(v.settings?.temperature)===.72)store.settings.temperature=.85;
-      store.settings.settingsRevision=150;delete store.settings.maxTokens;
+      store.settings.settingsRevision=180;delete store.settings.maxTokens;
       const hadManualChannels=Array.isArray(v.state?.manualChannels);
       store.state={...defaults.state,...(v.state||{})};
       if(!Array.isArray(store.state.pendingStoryIds))store.state.pendingStoryIds=store.state.pendingStoryId?[store.state.pendingStoryId]:[];

@@ -2,8 +2,8 @@ import { store, channels, latest, byId, displayForMessage, switchChannel, cycle,
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v170';
-const STYLE='swz-radio-style-v170';
+const SETTINGS_FRAME='swz-radio-settings-frame-v180';
+const STYLE='swz-radio-style-v180';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -98,18 +98,35 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;padding:0!important;border:1px solid rgba(235,218,197,.18)!important;border-radius:50%!important;background:rgba(8,10,13,.65)!important;color:#aaa39b!important;font-style:normal!important;font-size:8px!important;cursor:help!important}
 #${SETTINGS} .mrs-help::after{content:attr(data-tip)!important;position:absolute!important;z-index:50!important;right:-4px!important;bottom:calc(100% + 8px)!important;width:245px!important;max-width:70vw!important;padding:10px 11px!important;border:1px solid rgba(235,218,197,.15)!important;border-radius:10px!important;background:rgba(12,14,17,.97)!important;color:#c9c3bb!important;font-size:8px!important;line-height:1.65!important;text-align:left!important;white-space:normal!important;box-shadow:0 18px 42px rgba(0,0,0,.42)!important;opacity:0!important;pointer-events:none!important;transform:translateY(4px)!important;transition:.14s ease!important}
 #${SETTINGS} .mrs-help:hover::after,#${SETTINGS} .mrs-help:focus::after{opacity:1!important;transform:none!important}
+
+/* v1.8.0 visual compact pass */
+#${SETTINGS}.mrs-overlay{background:rgba(3,4,6,.34)!important;backdrop-filter:blur(3px)!important}
+#${SETTINGS} .mrs-panel{width:min(760px,calc(100vw - 34px))!important;height:min(650px,calc(100vh - 34px))!important;grid-template-rows:62px minmax(0,1fr) 52px!important;background:rgba(12,15,18,.34)!important;border-color:rgba(235,218,197,.22)!important}
+#${SETTINGS} .mrs-scene-image{opacity:.96!important;filter:saturate(.98) contrast(1.07) brightness(.95)!important;object-position:center 60%!important}
+#${SETTINGS} .mrs-scene-shade{background:radial-gradient(ellipse at 62% 35%,rgba(4,6,8,.08),rgba(4,6,8,.24) 60%,rgba(4,6,8,.42))!important}
+#${SETTINGS} .mrs-title{background:linear-gradient(90deg,rgba(10,12,14,.88),rgba(10,12,14,.62))!important;padding:0 14px 0 18px!important}
+#${SETTINGS} .mrs-close,#${SETTINGS} .mrs-tabs button,#${SETTINGS} .mrs-actions button,#${SETTINGS} .mrs-footer button,#${SETTINGS} .mrs-mini-btn{background:linear-gradient(180deg,#30363a,#1d2225)!important;border-color:#4d5457!important;color:#e0d9d0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 0 #101214!important}
+#${SETTINGS} .mrs-tabs button.active{background:linear-gradient(180deg,#344341,#263130)!important;border-color:#6f8e8a!important;color:#f1eee9!important;box-shadow:inset 2px 0 0 #9cc6c0,0 2px 0 #101214!important}
+#${SETTINGS} .mrs-content{padding:12px!important;background:rgba(10,12,15,.10)!important}
+#${SETTINGS} .mrs-card{padding:13px!important;background:linear-gradient(180deg,rgba(25,29,33,.92),rgba(15,18,21,.94))!important;border-color:rgba(235,218,197,.15)!important;backdrop-filter:none!important}
+#${SETTINGS} .mrs-card input:not([type=checkbox]):not([type=range]),#${SETTINGS} .mrs-card select,#${SETTINGS} .mrs-card textarea{background:#111519!important;border-color:#3f4649!important;color:#eee8e0!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)!important}
+#${SETTINGS} .mrs-mode-option span{min-height:72px!important;background:linear-gradient(180deg,#24292d,#191e21)!important;border-color:#41484b!important}
+#${SETTINGS} .mrs-mode-option.active span{background:linear-gradient(180deg,#344341,#25302f)!important;border-color:#6c8986!important}
+#${SETTINGS} .mrs-footer .mrs-primary{background:linear-gradient(180deg,#ddd7ce,#bdb6ad)!important;border-color:#b5aea5!important;color:#17191b!important;font-weight:700!important;box-shadow:inset 0 1px 0 #fff,0 2px 0 #77716b!important}
+#${SETTINGS} .mrs-page{gap:10px!important}
+#${SETTINGS} .mrs-card label{margin-top:9px!important}
 @media(max-width:760px){
   #${SETTINGS}.mrs-overlay{padding:0!important;background:rgba(3,4,6,.78)!important}
-  #${SETTINGS} .mrs-panel{width:100vw!important;height:100vh!important;max-height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:62px minmax(0,1fr) 54px!important}
+  #${SETTINGS} .mrs-panel{width:100vw!important;height:100vh!important;max-height:100vh!important;border:0!important;border-radius:0!important;grid-template-rows:56px minmax(0,1fr) 50px!important}
   #${SETTINGS} .mrs-title{padding:0 12px 0 14px!important;cursor:default!important}
   #${SETTINGS} .mrs-title b{font-size:15px!important}
   #${SETTINGS} .mrs-workspace{display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important}
   #${SETTINGS} .mrs-side{display:block!important;padding:8px!important;border-right:0!important;border-bottom:1px solid rgba(235,218,197,.11)!important;background:rgba(8,10,13,.62)!important}
   #${SETTINGS} .mrs-side-brand,#${SETTINGS} .mrs-side-note{display:none!important}
   #${SETTINGS} .mrs-tabs{display:flex!important;gap:5px!important;margin:0!important;overflow-x:auto!important}
-  #${SETTINGS} .mrs-tabs button{flex:1 0 68px!important;min-height:36px!important;padding:0 8px!important;text-align:center!important}
+  #${SETTINGS} .mrs-tabs button{flex:1 0 68px!important;min-height:32px!important;padding:0 7px!important;text-align:center!important}
   #${SETTINGS} .mrs-tabs button.active{box-shadow:inset 0 -2px 0 #94bbb8!important}
-  #${SETTINGS} .mrs-content{padding:9px!important}
+  #${SETTINGS} .mrs-content{padding:7px!important}
   #${SETTINGS} .mrs-page,#${SETTINGS} .mrs-page.active{grid-template-columns:1fr!important}
   #${SETTINGS} .mrs-card.mrs-full{grid-column:auto!important}
   #${SETTINGS} .mrs-mode-grid{grid-template-columns:1fr!important}
@@ -169,11 +186,13 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
     <div class="mr87-brief-copy"><strong class="mr87-brief-headline">等待接收</strong><span class="mr87-brief-summary">当前没有新的广播。</span></div>
     <div class="mr87-brief-side"><span class="mr87-brief-signal">▮▮▮▯</span><time class="mr87-brief-time">--:--</time><button data-r-action="toggle" class="mr87-expand">展开</button></div>
   </div>
+
   <div class="mr87-drawer">
     <img class="mr87-scene-bg" src="${radioBackdropUrl()}" alt="" aria-hidden="true">
     <div class="mr87-scene-vignette"></div>
+
     <header class="mr87-topline">
-      <div class="mr87-brand"><small>RUINS SIGNAL / PRIVATE RECEIVER</small><b>MR-87 · 废墟电波</b><span>有些声音穿过废墟，只为了告诉你：还有人在。</span></div>
+      <div class="mr87-brand"><small>MR-87 / RUINS RECEIVER</small><b>废墟电波</b><span>暮迟市幸存者接收终端</span></div>
       <div class="mr87-status"><i class="mr87-power-led"></i><span>正在接收</span><button class="mr87-gear" data-r-action="settings" title="收音机设置">⚙</button><button class="mr87-collapse-top" data-r-action="collapse" title="收起">⌄</button></div>
     </header>
 
@@ -187,10 +206,11 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
             <button data-r-channel="muchi"><span><em>FM</em><b>暮迟市频道</b><small>属于我们的频率</small></span><i></i></button>
           </div>
         </section>
-        <section class="mr87-panel mr87-memory-panel">
-          <div class="mr87-memory-copy"><small>87.4 MHz</small><b>“暮色未散，频道仍在。”</b><span>不同的坐标，同样的人。</span></div>
-          <div class="mr87-wave-line" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <section class="mr87-memory-panel" aria-hidden="true">
+          <div class="mr87-memory-copy"><small>87.4 MHz</small><b>暮色未散，频道仍在。</b><span>不同的坐标，同样的人。</span></div>
         </section>
+
         <section class="mr87-panel mr87-device-panel">
           <div class="mr87-panel-head"><div><small>DEVICE</small><b>设备控制</b></div></div>
           <div class="mr87-funcs">
@@ -235,13 +255,14 @@ function inlineHtml(){return `<section id="${ROOT}" class="${INLINE_CLASS}" aria
           <div class="mr87-intel-state"><span>今日状态</span><b data-r-intel-status>今日未结算</b></div>
           <div class="mr87-reroll-wrap"><button class="mr87-reroll" data-r-action="reroll">重Roll今日情报</button><button class="mr87-help" type="button" data-help data-tip="恢复到今日结算前的地图情报基线，重新生成暮迟市广播与地图情报，并覆盖上一版；不会叠加数值，也不受每日一次结算限制。已生成的旧正文不会自动改写。" aria-label="重Roll说明">?</button></div>
         </section>
-        <section class="mr87-panel mr87-signal-card">
-          <div class="mr87-panel-head"><div><small>SIGNAL</small><b>接收状态</b></div></div>
-          <div class="mr87-signal-visual"><div class="mr87-wave-line large"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>信号穿过噪声，但仍有人回应。</span></div>
-        </section>
+
         <section class="mr87-panel mr87-shortcuts">
           <button data-r-action="log"><span>广播记录</span><small>最近接收的内容</small><i>›</i></button>
           <button data-r-action="settings"><span>生成与显示设置</span><small>API · 自动接收 · 联动</small><i>›</i></button>
+        </section>
+
+        <section class="mr87-signal-card" aria-hidden="true">
+          <div class="mr87-wave-line large"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>仍有人回应。</span>
         </section>
       </aside>
     </div>
@@ -446,7 +467,7 @@ function renderSettings(){
 function readSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;stashSamplingState(r);const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
   store.settings.mode=selectedMode(r);store.settings.proxyPreset=v('proxyPreset');store.settings.proxyModelOverride=c('proxyModelOverride');store.settings.proxyModel=v('proxyModel').trim();store.settings.apiUrl=v('apiUrl').trim();setApiKey(v('apiKey'));store.settings.rememberKey=c('rememberKey');store.settings.customModel=v('customModel').trim();store.settings.model=store.settings.mode==='custom'?store.settings.customModel:store.settings.proxyModel;store.settings.source=v('source')||'openai';
-  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=140;
+  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=180;
   store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,80);store.settings.diversity=['steady','natural','rich','chaotic'].includes(v('diversity'))?v('diversity'):'natural';store.settings.songRequests=c('songRequests');store.settings.storyArcs=c('storyArcs');store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
   if(store.settings.mode==='custom'){if(!store.settings.apiUrl)throw Error('独立 API 需要填写 API URL');if(!store.settings.customModel)throw Error('独立 API 需要选择或填写模型')}
   if(store.settings.mode==='proxy'&&!store.settings.proxyPreset)throw Error('代理预设模式需要选择一个代理预设');
@@ -467,7 +488,7 @@ export function openSettings(){
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.7.0] 设置界面打开失败',err);
+    console.error('[MR-87 v1.8.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
