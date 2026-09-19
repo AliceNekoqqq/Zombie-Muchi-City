@@ -1,4 +1,4 @@
-export const VERSION='1.0.7';
+export const VERSION='1.1.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -9,7 +9,8 @@ export const channels={
 const KEY='muchi_radio_v3';
 const defaults={
   settings:{
-    mode:'main',proxyPreset:'',apiUrl:'',apiKey:'',rememberKey:false,model:'',source:'openai',temperature:.72,maxTokens:720,
+    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.72,maxTokens:720,
+    mainSampling:'inherit',proxySampling:'inherit',customSampling:'custom',
     auto:true,hours:6,dateRefresh:true,locationRefresh:true,initialBroadcast:true,autoChannel:'context',
     historyLimit:60,syncMvu:true,injectStory:true,applyEvents:true,syncClues:true,
     civilian:28,tension:'balanced',repeatGuard:true,extra:'',sound:true,static:32,scale:100,inline:true,showIdle:false
@@ -30,12 +31,47 @@ export const setRenderer=fn=>{render=typeof fn==='function'?fn:()=>{}};
 export const getApiKey=()=>sessionKey||(store.settings.rememberKey?store.settings.apiKey:'');
 export const setApiKey=v=>{sessionKey=String(v||'')};
 
+
+function tavernHelperFn(name){
+  try{if(typeof globalThis[name]==='function')return globalThis[name].bind(globalThis)}catch{}
+  try{const fn=globalThis.TavernHelper?.[name];if(typeof fn==='function')return fn.bind(globalThis.TavernHelper)}catch{}
+  return null;
+}
+
+/** 酒馆助手 4.8.3+：读取酒馆中已经保存的代理预设名称。 */
+export function getProxyPresets(){
+  const fn=tavernHelperFn('getProxyPresetNames');
+  if(!fn)return [];
+  try{return uniq(fn()).sort((a,b)=>a.localeCompare(b,'zh-CN'))}catch(e){console.warn('[MR-87] getProxyPresetNames',e);return []}
+}
+
+/** 酒馆助手 4.5.5+：按独立 API 地址和 Key 拉取模型列表。 */
+export async function fetchModelList(apiurl,key=''){
+  const fn=tavernHelperFn('getModelList');
+  if(!fn)throw Error('当前酒馆助手版本不支持拉取模型，请更新酒馆助手或手动填写模型名');
+  const url=String(apiurl||'').trim();
+  if(!url)throw Error('请先填写 API URL');
+  const list=await fn({apiurl:url,key:String(key||'')});
+  const models=uniq(list).sort((a,b)=>a.localeCompare(b,'en'));
+  if(!models.length)throw Error('接口没有返回可用模型');
+  return models;
+}
+
+export function generationCapabilities(){
+  return {proxyPresets:!!tavernHelperFn('getProxyPresetNames'),modelList:!!tavernHelperFn('getModelList')};
+}
+
 export function load(){
   try{
     const root=getVariables?.({type:'script'})||{};
     const v=root[KEY]||root.muchi_radio_v2;
     if(v){
       store.settings={...defaults.settings,...(v.settings||{})};
+      /* v1.0.x 只有一个 model 字段，迁移时按当时模式分流，避免代理预设和独立 API 互相覆盖。 */
+      const legacyModel=String(v.settings?.model||'');
+      if(!store.settings.customModel&&v.settings?.mode==='custom')store.settings.customModel=legacyModel;
+      if(!store.settings.proxyModel&&v.settings?.mode==='proxy')store.settings.proxyModel=legacyModel;
+      if(typeof store.settings.proxyModelOverride!=='boolean')store.settings.proxyModelOverride=!!store.settings.proxyModel;
       store.state={...defaults.state,...(v.state||{})};
       store.history=Array.isArray(v.history)?v.history:[];
     }
@@ -147,12 +183,39 @@ const schema={name:'muchi_radio_v3',strict:true,value:{type:'object',properties:
   side_clue:{type:'object',properties:{target:{type:'string',enum:['无','林安安','陆斯年']},name:{type:'string'},summary:{type:'string'},strength:{type:'string',enum:['无','弱','中','强']},region_hint:{type:'string'}},required:['target','name','summary','strength','region_hint'],additionalProperties:false}
 },required:['event_time','source','signal','category','headline','summary','transcript','certainty','world_event','side_clue'],additionalProperties:false}};
 
+function samplingModeFor(s,mode){
+  return mode==='proxy'?s.proxySampling:mode==='custom'?s.customSampling:s.mainSampling;
+}
+function applySampling(target,s,mode){
+  const sm=samplingModeFor(s,mode)||'inherit';
+  if(sm==='custom'){
+    target.temperature=clamp(s.temperature,0,2);
+    target.max_tokens=clamp(s.maxTokens,256,1600);
+  }else if(mode==='custom'){
+    /* 独立 API 也可以显式继承酒馆当前预设采样参数。 */
+    target.temperature='same_as_preset';
+    target.max_tokens='same_as_preset';
+  }
+  return target;
+}
 function config(k,w){
   const s=store.settings,c={user_input:userPrompt(k,w),ordered_prompts:[{role:'system',content:systemPrompt()},{role:'user',content:userPrompt(k,w)}],should_silence:true,json_schema:schema,generation_id:`muchi-radio-${Date.now()}`};
-  const sampling={temperature:clamp(s.temperature,0,2),max_tokens:clamp(s.maxTokens,256,1600)};
-  if(s.mode==='proxy')c.custom_api={proxy_preset:s.proxyPreset,model:s.model||undefined,...sampling};
-  else if(s.mode==='custom')c.custom_api={apiurl:s.apiUrl,key:getApiKey(),model:s.model,source:s.source||'openai',...sampling};
-  else c.custom_api={...sampling};
+  if(s.mode==='proxy'){
+    const api={proxy_preset:String(s.proxyPreset||'').trim()};
+    if(s.proxyModelOverride&&String(s.proxyModel||'').trim())api.model=String(s.proxyModel).trim();
+    c.custom_api=applySampling(api,s,'proxy');
+  }else if(s.mode==='custom'){
+    const api={
+      apiurl:String(s.apiUrl||'').trim(),
+      key:getApiKey(),
+      model:String(s.customModel||s.model||'').trim(),
+      source:s.source||'openai'
+    };
+    c.custom_api=applySampling(api,s,'custom');
+  }else if(samplingModeFor(s,'main')==='custom'){
+    /* 主预设模式默认完全跟随酒馆；只有用户明确要求覆盖采样时才创建 custom_api。 */
+    c.custom_api=applySampling({},s,'main');
+  }
   return c;
 }
 
