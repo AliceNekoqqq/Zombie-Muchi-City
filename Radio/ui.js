@@ -1,9 +1,9 @@
-import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, canCancelGeneration, cancelActiveGeneration, getActiveRequest, getProxyPresets, fetchModelList, generationCapabilities } from './core.js';
+import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, canCancelGeneration, cancelActiveGeneration, getActiveRequest, getProxyPresets, fetchModelList, generationCapabilities, listCustomApiPresets, getCustomApiPreset, saveCustomApiPreset, deleteCustomApiPreset, settingsPersistenceInfo, hasGenerationSource } from './core.js';
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
-const SETTINGS_FRAME='swz-radio-settings-frame-v190';
-const STYLE='swz-radio-style-v190';
+const SETTINGS_FRAME='swz-radio-settings-frame-v1100';
+const STYLE='swz-radio-style-v1100';
 const INLINE_CLASS='swz-mr87-inline';
 
 function resolveTavernDocument(){
@@ -91,7 +91,7 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-footer-note{color:#777e7f!important;font-size:7px!important;letter-spacing:.08em!important}
 #${SETTINGS} .mrs-footer-actions{display:flex!important;gap:8px!important}
 #${SETTINGS} .mrs-footer .mrs-primary{border-color:rgba(148,187,184,.26)!important;background:linear-gradient(180deg,rgba(62,94,91,.46),rgba(25,40,40,.60))!important;color:#ecf2ee!important}
-#${SETTINGS} .mrs-mode-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:9px!important;margin-top:8px!important}
+#${SETTINGS} .mrs-mode-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:8px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-mode-option{position:relative!important;display:block!important;margin:0!important;cursor:pointer!important}
 #${SETTINGS} .mrs-mode-option input{position:absolute!important;opacity:0!important;pointer-events:none!important}
 #${SETTINGS} .mrs-mode-option span{display:block!important;min-height:86px!important;padding:12px!important;border:1px solid rgba(235,218,197,.11)!important;border-radius:13px!important;background:rgba(7,9,11,.48)!important;transition:.16s ease!important}
@@ -107,6 +107,13 @@ function settingsCss(){return `
 #${SETTINGS} .mrs-field-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:end!important}
 #${SETTINGS} .mrs-status{padding:8px 10px!important;border-radius:9px!important;background:rgba(255,255,255,.025)!important;color:#858b8a!important;font-size:8px!important;line-height:1.5!important}
 #${SETTINGS} .mrs-status.ok{color:#9fc5bd!important;background:rgba(72,111,104,.10)!important}#${SETTINGS} .mrs-status.warn{color:#d4a788!important;background:rgba(121,78,49,.10)!important}
+#${SETTINGS} .mrs-detail{grid-column:1/-1!important;display:grid!important;gap:6px!important;padding:10px!important;border:1px solid rgba(235,218,197,.11)!important;border-radius:10px!important;background:rgba(8,11,13,.48)!important}
+#${SETTINGS} .mrs-detail-row{display:grid!important;grid-template-columns:86px minmax(0,1fr)!important;gap:8px!important;align-items:start!important;font-size:8px!important;line-height:1.55!important}
+#${SETTINGS} .mrs-detail-row span{color:#777f80!important}#${SETTINGS} .mrs-detail-row b{color:#d9d5cf!important;font-weight:520!important;word-break:break-word!important}
+#${SETTINGS} .mrs-preset-box{grid-column:1/-1!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:end!important;padding:10px!important;border:1px solid rgba(148,187,184,.12)!important;border-radius:11px!important;background:rgba(148,187,184,.035)!important}
+#${SETTINGS} .mrs-preset-box .mrs-preset-actions{display:flex!important;gap:6px!important;align-items:end!important;flex-wrap:wrap!important}
+#${SETTINGS} .mrs-preset-box .mrs-preset-actions button{white-space:nowrap!important}
+#${SETTINGS} .mrs-local-note{grid-column:1/-1!important;padding:8px 10px!important;border-radius:9px!important;background:rgba(70,91,92,.10)!important;color:#96aaa7!important;font-size:8px!important;line-height:1.55!important}
 #${SETTINGS} .mrs-sampling-fields{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-top:8px!important}
 #${SETTINGS} .mrs-hidden{display:none!important}
 #${SETTINGS} .mrs-help{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:17px!important;height:17px!important;padding:0!important;border:1px solid rgba(235,218,197,.18)!important;border-radius:50%!important;background:rgba(8,10,13,.65)!important;color:#aaa39b!important;font-style:normal!important;font-size:8px!important;cursor:help!important}
@@ -307,11 +314,12 @@ function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-h
       <div class="mrs-page" data-s-page="engine">
         <section class="mrs-card mrs-full">
           <h3>生成来源 <i class="mrs-help" tabindex="0" data-tip="主预设直接跟随酒馆；代理预设使用酒馆已保存的代理连接；独立 API 只给 MR-87 使用，不改变正文模型。">?</i></h3>
-          <div class="mrs-mode-grid"><label class="mrs-mode-option"><input type="radio" name="mode" value="main"><span><b>主预设</b><small>完全跟随当前酒馆连接与模型。最省心。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="proxy"><span><b>代理预设</b><small>使用酒馆中已保存的代理预设，不暴露 URL / Key。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="custom"><span><b>独立 API</b><small>只给 MR-87 使用，不改变主剧情 API。</small></span></label></div>
+          <div class="mrs-mode-grid"><label class="mrs-mode-option"><input type="radio" name="mode" value="none"><span><b>未配置</b><small>默认状态。不会调用任何 API，接收时会提示先设置。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="main"><span><b>主预设</b><small>完全跟随当前酒馆连接与模型。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="proxy"><span><b>代理预设</b><small>使用酒馆中已保存的代理连接。</small></span></label><label class="mrs-mode-option"><input type="radio" name="mode" value="custom"><span><b>独立 API</b><small>只给 MR-87 使用，不改变正文模型。</small></span></label></div>
           <div class="mrs-engine-shell">
+            <div class="mrs-engine" data-engine="none"><div class="mrs-source-note mrs-wide"><strong>尚未配置</strong><span>MR-87 默认不会借用正文 API。请从上方选择主预设、代理预设或独立 API；未配置时自动广播会跳过，手动接收会直接提醒你进入设置。</span></div></div>
             <div class="mrs-engine" data-engine="main"><div class="mrs-source-note mrs-wide"><strong>跟随酒馆</strong><span>URL、Key、模型全部使用当前酒馆设置，因此这些字段会自动隐藏。默认也继承主预设采样参数。</span></div></div>
-            <div class="mrs-engine" data-engine="proxy"><div class="mrs-field-row mrs-wide"><label>代理预设<select name="proxyPreset"></select></label><button type="button" class="mrs-mini-btn" data-s-action="refresh-proxies">刷新预设</button></div><div class="mrs-status mrs-wide" data-proxy-status></div><label class="mrs-check mrs-wide"><input name="proxyModelOverride" type="checkbox">覆盖代理预设中的模型</label><label class="mrs-wide" data-proxy-model-row>模型<input name="proxyModel" placeholder="仅在确实需要覆盖时填写"></label></div>
-            <div class="mrs-engine mrs-engine-custom" data-engine="custom"><label>API 类型<select name="source"><option value="openai">OpenAI / OpenAI兼容</option><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option><option value="claude">Claude</option><option value="makersuite">Google MakerSuite</option><option value="mistralai">Mistral</option><option value="groq">Groq</option><option value="custom">Custom</option></select></label><label>API URL<input name="apiUrl" placeholder="https://api.example.com/v1"></label><label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="不会发送给主剧情"></label><label class="mrs-check"><input name="rememberKey" type="checkbox">在本角色脚本变量中保存 Key</label><div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" placeholder="手填模型，或先拉取列表"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div><label class="mrs-wide mrs-model-pick-row mrs-hidden" data-model-pick-row>已拉取模型<select name="modelPick"><option value="">选择模型…</option></select></label><div class="mrs-status mrs-wide" data-model-status>拉取成功后会出现可下拉选择的模型列表；也可以直接手填。</div></div>
+            <div class="mrs-engine" data-engine="proxy"><div class="mrs-field-row mrs-wide"><label>代理预设<select name="proxyPreset"></select></label><button type="button" class="mrs-mini-btn" data-s-action="refresh-proxies">刷新预设</button></div><div class="mrs-status mrs-wide" data-proxy-status></div><div class="mrs-detail" data-proxy-detail><div class="mrs-detail-row"><span>当前预设</span><b data-proxy-detail-name>—</b></div><div class="mrs-detail-row"><span>连接</span><b data-proxy-detail-connection>—</b></div><div class="mrs-detail-row"><span>模型</span><b data-proxy-detail-model>—</b></div><div class="mrs-detail-row"><span>采样</span><b data-proxy-detail-sampling>—</b></div></div><label class="mrs-check mrs-wide"><input name="proxyModelOverride" type="checkbox">覆盖代理预设中的模型</label><label class="mrs-wide" data-proxy-model-row>模型<input name="proxyModel" placeholder="仅在确实需要覆盖时填写"></label></div>
+            <div class="mrs-engine mrs-engine-custom" data-engine="custom"><div class="mrs-preset-box"><label>已保存独立 API 预设<select name="customApiPreset"><option value="">选择预设…</option></select></label><div class="mrs-preset-actions"><button type="button" class="mrs-mini-btn" data-s-action="load-custom-preset">载入</button><button type="button" class="mrs-mini-btn" data-s-action="delete-custom-preset">删除</button></div><label>预设名称<input name="customApiPresetName" placeholder="例如：OpenRouter-日常"></label><div class="mrs-preset-actions"><button type="button" class="mrs-mini-btn" data-s-action="save-custom-preset">保存 / 覆盖</button></div><div class="mrs-status mrs-wide" data-custom-preset-status>预设保存在本机浏览器，不跟角色卡或聊天绑定。</div></div><label>API 类型<select name="source"><option value="openai">OpenAI / OpenAI兼容</option><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option><option value="claude">Claude</option><option value="makersuite">Google MakerSuite</option><option value="mistralai">Mistral</option><option value="groq">Groq</option><option value="custom">Custom</option></select></label><label>API URL<input name="apiUrl" placeholder="https://api.example.com/v1"></label><label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="不会发送给主剧情"></label><label class="mrs-check"><input name="rememberKey" type="checkbox">在本机保存 Key（跨角色 / 对话）</label><div class="mrs-field-row mrs-wide"><label>模型<input name="customModel" placeholder="手填模型，或先拉取列表"></label><button type="button" class="mrs-mini-btn" data-s-action="fetch-models">拉取模型</button></div><label class="mrs-wide mrs-model-pick-row mrs-hidden" data-model-pick-row>已拉取模型<select name="modelPick"><option value="">选择模型…</option></select></label><div class="mrs-status mrs-wide" data-model-status>拉取成功后会出现可下拉选择的模型列表；也可以直接手填。</div><div class="mrs-local-note">MR-87 的设置会保存在当前浏览器本地，因此切换角色卡、切换聊天后仍沿用；广播历史与世界情报仍各自留在对应剧情中。</div></div>
           </div>
         </section>
         <section class="mrs-card mrs-full"><h3>采样参数</h3><label class="mrs-check"><input name="inheritSampling" type="checkbox"><span data-sampling-label>沿用来源采样参数</span></label><div class="mrs-sampling-fields" data-sampling-fields><label>温度 <em data-s-value="temperature">0.85</em><input name="temperature" type="range" min="0" max="1.5" step="0.01"></label></div><p data-sampling-help></p></section>
@@ -373,8 +381,8 @@ function renderRadio(preferred){
   const reroll=root.querySelector('[data-r-action="reroll"]');if(reroll){reroll.disabled=isBusy()||!canRerollToday();reroll.textContent=isBusy()?'处理中…':'重Roll今日情报'}
   const impact=root.querySelector('.mr87-impact');
   if(!item){
-    root.querySelector('.mr87-brief-headline').textContent='等待接收';root.querySelector('.mr87-brief-summary').textContent='当前没有新的广播。';root.querySelector('.mr87-brief-time').textContent='--:--';root.querySelector('.mr87-brief-signal').textContent='▮▯▯▯';
-    root.querySelector('.mr87-bars').innerHTML=bars('断续');root.querySelector('.mr87-signal-text').textContent='无信号';root.querySelector('.mr87-time').textContent='--';root.querySelector('.mr87-source').textContent='暂无广播';root.querySelector('.mr87-headline').textContent='等待接收';root.querySelector('.mr87-transcript').textContent='当前频道还没有广播记录。';if(impact)impact.innerHTML='';
+    root.querySelector('.mr87-brief-headline').textContent=hasGenerationSource()?'等待接收':'尚未配置';root.querySelector('.mr87-brief-summary').textContent=hasGenerationSource()?'当前没有新的广播。':'请打开设置选择广播生成来源。';root.querySelector('.mr87-brief-time').textContent='--:--';root.querySelector('.mr87-brief-signal').textContent='▮▯▯▯';
+    root.querySelector('.mr87-bars').innerHTML=bars('断续');root.querySelector('.mr87-signal-text').textContent='无信号';root.querySelector('.mr87-time').textContent='--';root.querySelector('.mr87-source').textContent=hasGenerationSource()?'暂无广播':'生成来源未配置';root.querySelector('.mr87-headline').textContent=hasGenerationSource()?'等待接收':'请先设置 API';root.querySelector('.mr87-transcript').textContent=hasGenerationSource()?'当前频道还没有广播记录。':'MR-87 默认不调用任何 API。点击右上角齿轮，在“生成 API”中选择主预设、代理预设或独立 API。';if(impact)impact.innerHTML='';
   }else{
     root.querySelector('.mr87-brief-headline').textContent=item.headline||item.category||'广播更新';root.querySelector('.mr87-brief-summary').textContent=item.summary||'';root.querySelector('.mr87-brief-time').textContent=(item.eventTime||'').slice(-5);root.querySelector('.mr87-brief-signal').textContent=glyph(item.signal);
     root.querySelector('.mr87-bars').innerHTML=bars(item.signal);root.querySelector('.mr87-signal-text').textContent=item.signal;root.querySelector('.mr87-time').textContent=item.eventTime;root.querySelector('.mr87-source').textContent=item.source;root.querySelector('.mr87-headline').textContent=item.headline;root.querySelector('.mr87-transcript').innerHTML=transcriptHtml(item.transcript||item.summary);
@@ -397,7 +405,7 @@ const API_DEFAULTS={
   custom:''
 };
 const samplingKey=mode=>mode==='proxy'?'proxySampling':mode==='custom'?'customSampling':'mainSampling';
-const selectedMode=r=>r.querySelector('input[name="mode"]:checked')?.value||r.dataset.activeMode||'main';
+const selectedMode=r=>r.querySelector('input[name="mode"]:checked')?.value||r.dataset.activeMode||'none';
 
 function maybeAutofillUrl(r,force=false){
   const source=r.querySelector('[name="source"]')?.value||'openai',input=r.querySelector('[name="apiUrl"]');if(!input)return;
@@ -411,12 +419,42 @@ function refreshProxyPresetOptions(r,notify=false){
   const current=String(sel.value||store.settings.proxyPreset||'').trim();
   let names=[];try{names=getProxyPresets()}catch{}
   sel.innerHTML='';
-  if(!names.length){const o=r.ownerDocument.createElement('option');o.value=current;o.textContent=current?`${current}（已保存）`:'未读取到代理预设';sel.appendChild(o);sel.disabled=!current;if(status){status.textContent=generationCapabilities().proxyPresets?'未读取到代理预设；可点击“刷新预设”重试。':'当前酒馆助手不支持预设列表读取，请更新酒馆助手。';status.className='mrs-status warn'}return}
+  if(!names.length){const o=r.ownerDocument.createElement('option');o.value=current;o.textContent=current?`${current}（已保存）`:'未读取到代理预设';sel.appendChild(o);sel.disabled=!current;if(status){status.textContent=generationCapabilities().proxyPresets?'未读取到代理预设；可点击“刷新预设”重试。':'当前酒馆助手不支持预设列表读取，请更新酒馆助手。';status.className='mrs-status warn'}renderProxyPresetDetails(r);return}
   sel.disabled=false;for(const name of names){const o=r.ownerDocument.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o)}
   if(current&&!names.includes(current)){const o=r.ownerDocument.createElement('option');o.value=current;o.textContent=`${current}（已保存）`;sel.appendChild(o)}
   if(current)sel.value=current;else if(names.length===1)sel.value=names[0];
   if(status){status.textContent=`已读取 ${names.length} 个酒馆代理预设。`;status.className='mrs-status ok'}
+  renderProxyPresetDetails(r);
   if(notify)try{RH.toastr?.success?.(`已读取 ${names.length} 个代理预设`)}catch{}
+}
+
+function renderProxyPresetDetails(r){
+  const name=String(r.querySelector('[name="proxyPreset"]')?.value||'').trim();
+  const set=(sel,val)=>{const e=r.querySelector(sel);if(e)e.textContent=val};
+  const override=!!r.querySelector('[name="proxyModelOverride"]')?.checked,model=String(r.querySelector('[name="proxyModel"]')?.value||'').trim();
+  const sm=r.dataset.proxySampling||store.settings.proxySampling||'inherit';
+  set('[data-proxy-detail-name]',name||'未选择');
+  set('[data-proxy-detail-connection]',name?'使用该代理预设保存的 URL / Key；酒馆助手公开接口只提供预设名称，不返回连接明文。':'未选择代理预设');
+  set('[data-proxy-detail-model]',override?(model||'已开启覆盖，但尚未填写模型'):'跟随代理预设');
+  set('[data-proxy-detail-sampling]',sm==='custom'?`MR-87 自定义温度 ${Number(r.querySelector('[name="temperature"]')?.value||store.settings.temperature||.85).toFixed(2)}`:'跟随代理预设');
+}
+
+function refreshCustomPresetOptions(r,preferred=''){
+  const sel=r.querySelector('[name="customApiPreset"]');if(!sel)return;const current=preferred||sel.value;const items=listCustomApiPresets();sel.innerHTML='<option value="">选择预设…</option>';
+  for(const x of items){const o=r.ownerDocument.createElement('option');o.value=x.name;o.textContent=x.name;sel.appendChild(o)}
+  if(current&&items.some(x=>x.name===current))sel.value=current;
+}
+function collectCustomPresetForm(r){
+  const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
+  return{source:v('source')||'openai',apiUrl:v('apiUrl').trim(),apiKey:v('apiKey'),rememberKey:c('rememberKey'),customModel:v('customModel').trim(),customSampling:r.dataset.customSampling||'custom',temperature:clamp(v('temperature'),0,2)};
+}
+function loadCustomPresetIntoUi(r,name){
+  const p=getCustomApiPreset(name);if(!p)throw Error('找不到这个独立 API 预设');
+  const set=(n,v)=>{const e=r.querySelector(`[name="${n}"]`);if(!e)return;if(e.type==='checkbox')e.checked=!!v;else e.value=v??''};
+  set('source',p.source||'openai');set('apiUrl',p.apiUrl||'');set('apiKey',p.apiKey||'');set('rememberKey',!!p.rememberKey);set('customModel',p.customModel||'');set('customApiPresetName',name);r.dataset.customSampling=p.customSampling||'custom';
+  if(Number.isFinite(Number(p.temperature)))set('temperature',Number(p.temperature));
+  const tv=r.querySelector('[data-s-value="temperature"]');if(tv)tv.textContent=Number(r.querySelector('[name="temperature"]')?.value||.85).toFixed(2);
+  const url=r.querySelector('[name="apiUrl"]');if(url)url.dataset.autoUrl='0';clearModelPicker(r);loadSamplingState(r,'custom');applySamplingUi(r,'custom');
 }
 
 function stashSamplingState(r){
@@ -430,9 +468,9 @@ function loadSamplingState(r,mode){
 }
 function applySamplingUi(r,mode){
   const inherit=!!r.querySelector('[name="inheritSampling"]')?.checked,fields=r.querySelector('[data-sampling-fields]'),label=r.querySelector('[data-sampling-label]'),help=r.querySelector('[data-sampling-help]');
-  fields?.classList.toggle('mrs-hidden',inherit);
-  if(label)label.textContent=mode==='proxy'?'沿用代理预设采样参数':mode==='custom'?'沿用酒馆当前采样参数':'沿用酒馆主预设采样参数';
-  if(help)help.textContent=inherit?(mode==='custom'?'独立 API 沿用酒馆当前温度；不人为设置输出 Tokens 上限。':'不额外覆盖温度，也不人为设置输出 Tokens 上限。'):'仅 MR-87 使用下方温度；输出 Tokens 上限不再由脚本限制。';
+  fields?.classList.toggle('mrs-hidden',inherit||mode==='none');
+  if(label)label.textContent=mode==='none'?'未配置生成来源':mode==='proxy'?'沿用代理预设采样参数':mode==='custom'?'沿用酒馆当前采样参数':'沿用酒馆主预设采样参数';
+  if(help)help.textContent=mode==='none'?'先选择生成来源后，采样参数才会生效。':inherit?(mode==='custom'?'独立 API 沿用酒馆当前温度；不人为设置输出 Tokens 上限。':'不额外覆盖温度，也不人为设置输出 Tokens 上限。'):'仅 MR-87 使用下方温度；输出 Tokens 上限不再由脚本限制。';
 }
 function applyModeUi(r,mode,{loadSampling=true}={}){
   if(r.dataset.activeMode&&r.dataset.activeMode!==mode)stashSamplingState(r);
@@ -443,8 +481,8 @@ function applyModeUi(r,mode,{loadSampling=true}={}){
   applySamplingUi(r,mode);
   const proxyOverride=!!r.querySelector('[name="proxyModelOverride"]')?.checked;
   r.querySelector('[data-proxy-model-row]')?.classList.toggle('mrs-hidden',!proxyOverride);
-  if(mode==='proxy')refreshProxyPresetOptions(r);
-  if(mode==='custom')maybeAutofillUrl(r);
+  if(mode==='proxy'){refreshProxyPresetOptions(r);renderProxyPresetDetails(r)}
+  if(mode==='custom'){maybeAutofillUrl(r);refreshCustomPresetOptions(r)}
 }
 
 function renderModelPicker(r,models=modelCache){
@@ -472,7 +510,7 @@ async function fetchModelsIntoUi(r,button){
 function renderSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;const s=store.settings;
   const set=(name,v)=>{const e=r.querySelector(`[name="${name}"]`);if(!e)return;if(e.type==='checkbox')e.checked=!!v;else e.value=v??''};
-  r.querySelectorAll('input[name="mode"]').forEach(e=>e.checked=e.value===(s.mode||'main'));
+  r.querySelectorAll('input[name="mode"]').forEach(e=>e.checked=e.value===(s.mode||'none'));
   ['proxyPreset','proxyModel','apiUrl','source','temperature','hours','autoChannel','historyLimit','civilian','diversity','tension','extra','static','scale'].forEach(n=>set(n,s[n]));
   set('apiKey',getApiKey());set('customModel',s.customModel||s.model||'');set('proxyModelOverride',!!s.proxyModelOverride);
   ['rememberKey','auto','initialBroadcast','dateRefresh','locationRefresh','injectStory','applyEvents','syncClues','syncMvu','repeatGuard','songRequests','storyArcs','sound','inline','showIdle'].forEach(n=>set(n,s[n]));
@@ -480,12 +518,13 @@ function renderSettings(){
   r.querySelector('[data-s-value="temperature"]').textContent=Number(s.temperature).toFixed(2);r.querySelector('[data-s-value="civilian"]').textContent=`${s.civilian}%`;r.querySelector('[data-s-value="static"]').textContent=`${s.static}%`;r.querySelector('[data-s-value="scale"]').textContent=`${s.scale}%`;
   const url=r.querySelector('[name="apiUrl"]');if(url)url.dataset.autoUrl=Object.values(API_DEFAULTS).includes(String(url.value||''))?'1':'0';
   if(modelCache.length&&modelCacheUrl===String(s.apiUrl||''))renderModelPicker(r,modelCache);else renderModelPicker(r,[]);
-  applyModeUi(r,s.mode||'main');
+  refreshCustomPresetOptions(r);applyModeUi(r,s.mode||'none');
+  const persist=r.querySelector('[data-custom-preset-status]'),info=settingsPersistenceInfo();if(persist&&!info.available){persist.textContent='当前浏览器环境不允许本地存储；设置只能维持到本次脚本会话。';persist.className='mrs-status mrs-wide warn'}
 }
 function readSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;stashSamplingState(r);const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
   store.settings.mode=selectedMode(r);store.settings.proxyPreset=v('proxyPreset');store.settings.proxyModelOverride=c('proxyModelOverride');store.settings.proxyModel=v('proxyModel').trim();store.settings.apiUrl=v('apiUrl').trim();setApiKey(v('apiKey'));store.settings.rememberKey=c('rememberKey');store.settings.customModel=v('customModel').trim();store.settings.model=store.settings.mode==='custom'?store.settings.customModel:store.settings.proxyModel;store.settings.source=v('source')||'openai';
-  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=190;
+  store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=200;
   store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,80);store.settings.diversity=['steady','natural','rich','chaotic'].includes(v('diversity'))?v('diversity'):'natural';store.settings.songRequests=c('songRequests');store.settings.storyArcs=c('storyArcs');store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
   if(store.settings.mode==='custom'){if(!store.settings.apiUrl)throw Error('独立 API 需要填写 API URL');if(!store.settings.customModel)throw Error('独立 API 需要选择或填写模型')}
   if(store.settings.mode==='proxy'&&!store.settings.proxyPreset)throw Error('代理预设模式需要选择一个代理预设');
@@ -499,14 +538,14 @@ export function openSettings(){
     closeSettings();
     const r=ensureSettingsMount();
     renderSettings();
-    activateSettingsTab('general');
+    activateSettingsTab(hasGenerationSource()?'general':'engine');
     r.classList.add('mrs-open');
     r.setAttribute('aria-hidden','false');
     r.style.setProperty('display','flex','important');
     const c=r.querySelector('.mrs-content');if(c)c.scrollTop=0;
     return r;
   }catch(err){
-    console.error('[MR-87 v1.9.3] 设置界面打开失败',err);
+    console.error('[MR-87 v1.10.0] 设置界面打开失败',err);
     cleanupLegacySettings();
     try{RH.toastr?.error?.(`收音机设置打开失败：${err?.message||err}`)}catch{}
     return null;
@@ -538,9 +577,10 @@ function bindInline(root){
     if(a==='scan'){noise(.4);root.classList.add('scanning');setTimeout(()=>{cycle(1);const x=latest(store.state.channel);root.dataset.broadcastId=x?.id||'';forceBroadcastId=x?.id||'';root.classList.remove('scanning');renderRadio(x||undefined)},520);return}
     if(a==='receive'){
       if(isBusy()){if(canCancelGeneration())cancelActiveGeneration();return}
+      if(!hasGenerationSource()){try{RH.toastr?.warning?.('MR-87 尚未配置生成来源，请先完成 API 设置')}catch{};openSettings();activateSettingsTab('engine');return}
       if(store.state.power){const items=await generate(requestChannels(),'manual');focusGenerated(items,root)}return
     }
-    if(a==='reroll'){if(store.state.power){const x=await rerollTodayIntel();if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
+    if(a==='reroll'){if(!hasGenerationSource()){try{RH.toastr?.warning?.('MR-87 尚未配置生成来源，请先完成 API 设置')}catch{};openSettings();activateSettingsTab('engine');return}if(store.state.power){const x=await rerollTodayIntel();if(x){forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x)}}return}
     if(a==='power'){store.state.power=!store.state.power;clickSound();save();renderRadio();return}if(a==='mute'){store.state.mute=!store.state.mute;save();renderRadio();return}if(a==='light'){store.state.light=!store.state.light;clickSound();save();renderRadio();return}if(a==='hold'){store.state.hold=!store.state.hold;clickSound();save();renderRadio();return}if(a==='log'){root.classList.toggle('log-open');clickSound();return}if(a==='tune'){noise(.08);b.style.setProperty('--rot',`${Math.round(Math.random()*90-45)}deg`);return}if(a==='volume'){store.state.volume=store.state.volume>=90?20:store.state.volume+10;save();renderRadio();clickSound();return}
   });
   root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('mr87-brief')){e.preventDefault();root.classList.toggle('expanded');renderRadio()}});
@@ -574,11 +614,14 @@ function bindSettings(){
     if(a==='save'){try{readSettings();RH.toastr?.success?.('收音机设置已保存');closeSettings()}catch(err){RH.toastr?.error?.(err?.message||String(err))}return}
     if(a==='refresh-proxies'){refreshProxyPresetOptions(r,true);return}
     if(a==='fetch-models'){await fetchModelsIntoUi(r,b);return}
+    if(a==='load-custom-preset'){const name=String(r.querySelector('[name="customApiPreset"]')?.value||'').trim();if(!name){RH.toastr?.warning?.('请先选择一个独立 API 预设');return}try{loadCustomPresetIntoUi(r,name);RH.toastr?.success?.(`已载入预设：${name}`)}catch(err){RH.toastr?.error?.(err?.message||String(err))}return}
+    if(a==='save-custom-preset'){const input=r.querySelector('[name="customApiPresetName"]'),name=String(input?.value||r.querySelector('[name="customApiPreset"]')?.value||'').trim();try{saveCustomApiPreset(name,collectCustomPresetForm(r));if(input)input.value=name;refreshCustomPresetOptions(r,name);const st=r.querySelector('[data-custom-preset-status]');if(st){st.textContent=`已保存“${name}”到本机浏览器。`;st.className='mrs-status mrs-wide ok'}RH.toastr?.success?.(`独立 API 预设已保存：${name}`)}catch(err){RH.toastr?.error?.(err?.message||String(err))}return}
+    if(a==='delete-custom-preset'){const name=String(r.querySelector('[name="customApiPreset"]')?.value||'').trim();if(!name){RH.toastr?.warning?.('请先选择要删除的预设');return}if(deleteCustomApiPreset(name)){refreshCustomPresetOptions(r);const st=r.querySelector('[data-custom-preset-status]');if(st){st.textContent=`已删除“${name}”。`;st.className='mrs-status mrs-wide'}RH.toastr?.info?.(`已删除预设：${name}`)}return}
     if(a==='clear-history'){clearHistory();RH.toastr?.info?.('广播历史已清空');return}
   });
   r.addEventListener('input',e=>{
     const n=e.target.name;
-    if(n==='temperature')r.querySelector('[data-s-value="temperature"]').textContent=Number(e.target.value).toFixed(2);
+    if(n==='temperature'){r.querySelector('[data-s-value="temperature"]').textContent=Number(e.target.value).toFixed(2);if(selectedMode(r)==='proxy')renderProxyPresetDetails(r)}
     if(n==='civilian')r.querySelector('[data-s-value="civilian"]').textContent=`${e.target.value}%`;
     if(n==='static')r.querySelector('[data-s-value="static"]').textContent=`${e.target.value}%`;
     if(n==='scale'){r.querySelector('[data-s-value="scale"]').textContent=`${e.target.value}%`;RDOC.getElementById(ROOT)?.style.setProperty('--mr87-scale',String(clamp(e.target.value,80,120)/100))}
@@ -587,8 +630,10 @@ function bindSettings(){
   r.addEventListener('change',e=>{
     const n=e.target.name;
     if(n==='mode'){applyModeUi(r,e.target.value);return}
-    if(n==='inheritSampling'){stashSamplingState(r);applySamplingUi(r,selectedMode(r));return}
-    if(n==='proxyModelOverride'){r.querySelector('[data-proxy-model-row]')?.classList.toggle('mrs-hidden',!e.target.checked);return}
+    if(n==='inheritSampling'){stashSamplingState(r);applySamplingUi(r,selectedMode(r));if(selectedMode(r)==='proxy')renderProxyPresetDetails(r);return}
+    if(n==='proxyPreset'){renderProxyPresetDetails(r);return}
+    if(n==='proxyModelOverride'){r.querySelector('[data-proxy-model-row]')?.classList.toggle('mrs-hidden',!e.target.checked);renderProxyPresetDetails(r);return}
+    if(n==='proxyModel'){renderProxyPresetDetails(r);return}
     if(n==='modelPick'){const input=r.querySelector('[name="customModel"]');if(input&&e.target.value)input.value=e.target.value;return}
     if(n==='source'){maybeAutofillUrl(r);if(String(r.querySelector('[name="apiUrl"]')?.value||'').trim()!==modelCacheUrl)clearModelPicker(r);return}
   });

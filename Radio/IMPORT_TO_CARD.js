@@ -1,3 +1,21 @@
-await import('https://cdn.jsdelivr.net/gh/AliceNekoqqq/MAP-Muchi-City@v2.0.0/Maps/index.js?muchi=200')
-  .catch(()=>import('https://testingcf.jsdelivr.net/gh/AliceNekoqqq/MAP-Muchi-City@main/Maps/index.js?muchi=200'))
-  .catch(()=>import('https://fastly.jsdelivr.net/gh/AliceNekoqqq/MAP-Muchi-City@main/Maps/index.js?muchi=200'));
+async function importMr87(){
+  const urls=[
+    'https://cdn.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.10.0/Radio/index.js?mr87=1100',
+    'https://testingcf.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1100',
+    'https://fastly.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1100'
+  ];
+  const errors=[];
+  for(const url of urls){
+    try{
+      const mod=await import(url);
+      if(typeof mod?.openRadio==='function' && typeof mod?.openSettings==='function')return mod;
+      errors.push(`${url} -> 导出不匹配: ${Object.keys(mod||{}).join(',')||'无导出'}`);
+    }catch(e){errors.push(`${url} -> ${e?.message||e}`)}
+  }
+  throw new Error('MR-87 v1.10.0 模块加载失败；请将 Radio 目录上传到 Zombie-Muchi-City main，并建议创建 v1.10.0 标签。'+errors.join(' | '));
+}
+const mr87=await importMr87();
+$(()=>{
+  eventOn(getButtonEvent('打开MR-87'),()=>mr87.openRadio());
+  eventOn(getButtonEvent('收音机设置'),()=>mr87.openSettings());
+});

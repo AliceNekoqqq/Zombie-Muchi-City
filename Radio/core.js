@@ -1,4 +1,4 @@
-export const VERSION='1.9.3';
+export const VERSION='1.10.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -9,7 +9,7 @@ export const channels={
 const KEY='muchi_radio_v3';
 const defaults={
   settings:{
-    mode:'main',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:190,
+    mode:'none',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:200,
     mainSampling:'inherit',proxySampling:'inherit',customSampling:'custom',
     auto:true,hours:6,dateRefresh:true,locationRefresh:true,initialBroadcast:true,autoChannel:'context',
     historyLimit:60,syncMvu:true,injectStory:true,applyEvents:true,syncClues:true,
@@ -27,6 +27,52 @@ const defaults={
 
 export const store=structuredClone(defaults);
 let sessionKey='',busy=false,render=()=>{},audio=null,activeRequest=null,requestSeq=0;
+
+const LOCAL_SETTINGS_KEY='mr87_global_settings_v1';
+const LOCAL_CUSTOM_PRESETS_KEY='mr87_custom_api_presets_v1';
+
+function browserStorage(){
+  const getters=[
+    ()=>globalThis.$?.('body')?.[0]?.ownerDocument?.defaultView?.localStorage,
+    ()=>globalThis.parent?.localStorage,
+    ()=>globalThis.localStorage
+  ];
+  for(const get of getters){try{const s=get();if(s){const t='__mr87_storage_test__';s.setItem(t,'1');s.removeItem(t);return s}}catch{}}
+  return null;
+}
+function readLocal(key,fallback=null){try{const s=browserStorage(),raw=s?.getItem(key);return raw?JSON.parse(raw):fallback}catch(e){console.warn('[MR-87] local read',e);return fallback}}
+function writeLocal(key,value){try{const s=browserStorage();if(!s)return false;s.setItem(key,JSON.stringify(value));return true}catch(e){console.warn('[MR-87] local write',e);return false}}
+function persistSettingsLocal(){
+  const copy=structuredClone(store.settings);
+  copy.apiKey=copy.rememberKey?(sessionKey||copy.apiKey||''):'';
+  copy.settingsRevision=200;
+  return writeLocal(LOCAL_SETTINGS_KEY,copy);
+}
+export function settingsPersistenceInfo(){return{scope:'browser-local',available:!!browserStorage(),key:LOCAL_SETTINGS_KEY}}
+export function listCustomApiPresets(){
+  const all=readLocal(LOCAL_CUSTOM_PRESETS_KEY,{})||{};
+  return Object.keys(all).sort((a,b)=>a.localeCompare(b,'zh-CN')).map(name=>({name,...structuredClone(all[name])}));
+}
+export function getCustomApiPreset(name){
+  const all=readLocal(LOCAL_CUSTOM_PRESETS_KEY,{})||{},v=all[String(name||'').trim()];
+  return v?structuredClone(v):null;
+}
+export function saveCustomApiPreset(name,data={}){
+  const n=String(name||'').trim();if(!n)throw Error('请输入独立 API 预设名称');if(n.length>60)throw Error('预设名称不能超过60个字符');
+  const all=readLocal(LOCAL_CUSTOM_PRESETS_KEY,{})||{};
+  const rememberKey=!!data.rememberKey;
+  all[n]={source:String(data.source||'openai'),apiUrl:String(data.apiUrl||'').trim(),apiKey:rememberKey?String(data.apiKey||''):'',rememberKey,customModel:String(data.customModel||'').trim(),customSampling:data.customSampling==='inherit'?'inherit':'custom',temperature:clamp(data.temperature,0,2),updatedAt:Date.now()};
+  if(!all[n].apiUrl)throw Error('保存预设前请填写 API URL');
+  if(!all[n].customModel)throw Error('保存预设前请选择或填写模型');
+  if(!writeLocal(LOCAL_CUSTOM_PRESETS_KEY,all))throw Error('浏览器本地存储不可用，无法保存预设');
+  return structuredClone(all[n]);
+}
+export function deleteCustomApiPreset(name){
+  const n=String(name||'').trim(),all=readLocal(LOCAL_CUSTOM_PRESETS_KEY,{})||{};if(!n||!all[n])return false;delete all[n];return writeLocal(LOCAL_CUSTOM_PRESETS_KEY,all);
+}
+export function hasGenerationSource(){
+  const s=store.settings;if(s.mode==='main')return true;if(s.mode==='proxy')return !!String(s.proxyPreset||'').trim();if(s.mode==='custom')return !!String(s.apiUrl||'').trim()&&!!String(s.customModel||s.model||'').trim();return false;
+}
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const uniq=a=>[...new Set((Array.isArray(a)?a:[]).filter(Boolean).map(String))];
 export const isBusy=()=>busy;
@@ -85,37 +131,45 @@ export function cancelActiveGeneration(){
 export function load(){
   try{
     const root=getVariables?.({type:'script'})||{};
-    const v=root[KEY]||root.muchi_radio_v2;
-    if(v){
-      store.settings={...defaults.settings,...(v.settings||{})};
-      const legacyModel=String(v.settings?.model||'');
-      if(!store.settings.customModel&&v.settings?.mode==='custom')store.settings.customModel=legacyModel;
-      if(!store.settings.proxyModel&&v.settings?.mode==='proxy')store.settings.proxyModel=legacyModel;
-      if(typeof store.settings.proxyModelOverride!=='boolean')store.settings.proxyModelOverride=!!store.settings.proxyModel;
-      if(Number(v.settings?.settingsRevision||0)<120&&Number(v.settings?.temperature)===.72)store.settings.temperature=.85;
-      store.settings.settingsRevision=190;delete store.settings.maxTokens;
-      const hadManualChannels=Array.isArray(v.state?.manualChannels);
-      store.state={...defaults.state,...(v.state||{})};
-      if(!Array.isArray(store.state.pendingStoryIds))store.state.pendingStoryIds=store.state.pendingStoryId?[store.state.pendingStoryId]:[];
-      store.state.manualChannels=hadManualChannels?uniq(store.state.manualChannels).filter(k=>channels[k]):[store.state.channel||'muchi'];
-      if(!store.state.manualChannels.length)store.state.manualChannels=[store.state.channel||'muchi'];
-      store.intel={...defaults.intel,...(v.intel||{})};
-      if(!['idle','no_intel','settled','exhausted'].includes(store.intel.status))store.intel.status='idle';
-      if(!Array.isArray(store.intel.regions))store.intel.regions=[];
-      store.director={...defaults.director,...(v.director||{})};
-      if(!Array.isArray(store.director.recent))store.director.recent=[];
-      if(!Array.isArray(store.director.arcs))store.director.arcs=[];
-      store.history=Array.isArray(v.history)?v.history:[];
-    }
+    const v=root[KEY]||root.muchi_radio_v2||{};
+    const localSettings=readLocal(LOCAL_SETTINGS_KEY,null);
+    const legacySettings=v.settings&&typeof v.settings==='object'?v.settings:null;
+    const sourceSettings=localSettings||legacySettings||{};
+    store.settings={...defaults.settings,...sourceSettings};
+    const legacyModel=String(sourceSettings?.model||'');
+    if(!store.settings.customModel&&sourceSettings?.mode==='custom')store.settings.customModel=legacyModel;
+    if(!store.settings.proxyModel&&sourceSettings?.mode==='proxy')store.settings.proxyModel=legacyModel;
+    if(typeof store.settings.proxyModelOverride!=='boolean')store.settings.proxyModelOverride=!!store.settings.proxyModel;
+    if(Number(sourceSettings?.settingsRevision||0)<120&&Number(sourceSettings?.temperature)===.72)store.settings.temperature=.85;
+    if(!['none','main','proxy','custom'].includes(store.settings.mode))store.settings.mode='none';
+    store.settings.settingsRevision=200;delete store.settings.maxTokens;
+
+    const hadManualChannels=Array.isArray(v.state?.manualChannels);
+    store.state={...defaults.state,...(v.state||{})};
+    if(!Array.isArray(store.state.pendingStoryIds))store.state.pendingStoryIds=store.state.pendingStoryId?[store.state.pendingStoryId]:[];
+    store.state.manualChannels=hadManualChannels?uniq(store.state.manualChannels).filter(k=>channels[k]):[store.state.channel||'muchi'];
+    if(!store.state.manualChannels.length)store.state.manualChannels=[store.state.channel||'muchi'];
+    store.intel={...defaults.intel,...(v.intel||{})};
+    if(!['idle','no_intel','settled','exhausted'].includes(store.intel.status))store.intel.status='idle';
+    if(!Array.isArray(store.intel.regions))store.intel.regions=[];
+    store.director={...defaults.director,...(v.director||{})};
+    if(!Array.isArray(store.director.recent))store.director.recent=[];
+    if(!Array.isArray(store.director.arcs))store.director.arcs=[];
+    store.history=Array.isArray(v.history)?v.history:[];
     if(store.settings.rememberKey)sessionKey=store.settings.apiKey||'';
+    if(!localSettings&&legacySettings)persistSettingsLocal();
   }catch(e){console.warn('[MR-87] load',e)}
 }
 
 export function save(){
   try{
+    const localSaved=persistSettingsLocal();
     const copy=structuredClone(store);
-    copy.settings.apiKey=copy.settings.rememberKey?(sessionKey||copy.settings.apiKey||''):'';
-    copy.history=copy.history.slice(0,clamp(copy.settings.historyLimit,10,200));
+    // 正常环境把设置存到酒馆主页面 localStorage，实现跨角色卡 / 跨聊天复用。
+    // 如果浏览器禁用了 localStorage，则保留旧的脚本变量设置作为当前剧情兜底，避免重载即丢失。
+    if(localSaved)delete copy.settings;
+    else{copy.settings=structuredClone(store.settings);copy.settings.apiKey='';}
+    copy.history=copy.history.slice(0,clamp(store.settings.historyLimit,10,200));
     copy.director={...(copy.director||{}),recent:(copy.director?.recent||[]).slice(0,30),arcs:(copy.director?.arcs||[]).slice(0,6)};
     updateVariablesWith?.(v=>{v[KEY]=copy;return v},{type:'script'});
   }catch(e){console.warn('[MR-87] save',e)}
@@ -406,7 +460,8 @@ function samplingModeFor(s,mode){return mode==='proxy'?s.proxySampling:mode==='c
 function applySampling(target,s,mode){const sm=samplingModeFor(s,mode)||'inherit';if(sm==='custom')target.temperature=clamp(s.temperature,0,2);else if(mode==='custom')target.temperature='same_as_preset';return target}
 function config(input,w,route='pure',plan=null){
   const keys=normalizeChannelKeys(input);if(!keys.length)throw Error('没有可生成的广播频道');
-  const s=store.settings,intel=route==='settle'||route==='reroll',prompt=intel?settlementPrompt(keys,w,plan,route==='reroll'):purePrompt(keys,w,plan);
+  const s=store.settings;if(!hasGenerationSource())throw requestError('MR-87 尚未配置生成来源，请先打开收音机设置选择主预设、代理预设或独立 API','MR87_API_UNSET');
+  const intel=route==='settle'||route==='reroll',prompt=intel?settlementPrompt(keys,w,plan,route==='reroll'):purePrompt(keys,w,plan);
   const c={user_input:prompt,ordered_prompts:[{role:'system',content:systemPrompt()},{role:'user',content:prompt}],should_silence:true,json_schema:intel?intelEnvelopeSchema:pureEnvelopeSchema,generation_id:`muchi-radio-${route}-${Date.now()}-${++requestSeq}`};
   if(s.mode==='proxy'){
     const api={proxy_preset:String(s.proxyPreset||'').trim()};if(s.proxyModelOverride&&String(s.proxyModel||'').trim())api.model=String(s.proxyModel).trim();c.custom_api=applySampling(api,s,'proxy');
@@ -619,6 +674,7 @@ export async function generate(input=store.state.channel,reason='manual'){
     if(reason==='manual')toastr?.success?.(items.length>1?`一次收到 ${items.length} 个频道的新广播`:`收到新的${channels[keys[0]].label}广播`);
     return wantsArray?items:(items[0]||null);
   }catch(e){
+    if(e?.code==='MR87_API_UNSET'){console.info('[MR-87] generation source unset');render('error',e?.message||String(e));toastr?.warning?.('MR-87 尚未配置生成来源，请先打开设置');return wantsArray?[]:null}
     if(e?.code==='MR87_CANCELLED'){console.info('[MR-87] request cancelled');toastr?.info?.('已取消本次广播请求');return wantsArray?[]:null}
     if(e?.code==='MR87_TIMEOUT'){console.warn('[MR-87] request timeout',e);render('error',e?.message||String(e));toastr?.warning?.(e?.message||'广播请求超时');return wantsArray?[]:null}
     console.error('[MR-87]',e);render('error',e?.message||String(e));toastr?.error?.(`收音机生成失败：${e?.message||e}`);return wantsArray?[]:null
@@ -688,7 +744,7 @@ function injectStoryBroadcast(value){
 }
 
 export async function prepareBeforeGeneration(){
-  if(busy)return null;
+  if(busy||!hasGenerationSource())return null;
   const pending=pendingRecords();if(pending.length){injectStoryBroadcast(pending);return pending.length===1?pending[0]:pending}
   const w=await world(),plan=autoPlan(w);if(!plan.keys.length)return null;
   const value=await generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`),items=(Array.isArray(value)?value:[value]).filter(Boolean);
@@ -707,6 +763,7 @@ export function displayForMessage(messageId){
 }
 
 export async function autoRefresh(){
+  if(!hasGenerationSource())return null;
   const w=await world(),plan=autoPlan(w);if(!plan.keys.length||busy)return null;
   return generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`);
 }
