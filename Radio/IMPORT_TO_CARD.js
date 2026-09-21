@@ -1,8 +1,8 @@
 async function importMr87(){
   const urls=[
-    'https://cdn.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.10.0/Radio/index.js?mr87=1100',
-    'https://testingcf.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1100',
-    'https://fastly.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1100'
+    'https://cdn.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.11.0/Radio/index.js?mr87=1110',
+    'https://testingcf.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1110',
+    'https://fastly.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@main/Radio/index.js?mr87=1110'
   ];
   const errors=[];
   for(const url of urls){
@@ -12,7 +12,7 @@ async function importMr87(){
       errors.push(`${url} -> 导出不匹配: ${Object.keys(mod||{}).join(',')||'无导出'}`);
     }catch(e){errors.push(`${url} -> ${e?.message||e}`)}
   }
-  throw new Error('MR-87 v1.10.0 模块加载失败；请将 Radio 目录上传到 Zombie-Muchi-City main，并建议创建 v1.10.0 标签。'+errors.join(' | '));
+  throw new Error('MR-87 v1.11.0 模块加载失败；请将 Radio 目录上传到 Zombie-Muchi-City main，并建议创建 v1.11.0 标签。'+errors.join(' | '));
 }
 const mr87=await importMr87();
 $(()=>{

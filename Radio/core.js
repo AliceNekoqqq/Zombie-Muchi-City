@@ -1,4 +1,4 @@
-export const VERSION='1.10.0';
+export const VERSION='1.11.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -272,6 +272,14 @@ function pickRegion(k,w,route,theme,avoid=[]){
 }
 function humanityChance(profile){return Math.min(.78,Math.max(0,Number(store.settings.civilian||0))/100*profile.humanity)}
 function pickHumanity(k,w){if(k!=='muchi'||rng()>humanityChance(modeProfile()))return null;const hour=Number(String(w?.time||'12:00').split(':')[0]||12),night=hour>=21||hour<5;return weighted(HUMANITY_POOL,x=>{if(x.id==='song_request'&&!store.settings.songRequests)return 0;if(x.id==='midnight'&&!night)return 0;return x.w*repeatFactor(k,'humanityId',x.id)})}
+function parentShadowHint(k,w,human){
+  if(k!=='muchi'||human?.id!=='missing_person')return'';
+  const p=w?.raw?.暗线?.父母,day=Number(w?.day||1);
+  if(!p||String(p.状态||'')!=='未寻获'||day<1||day>8)return'';
+  if(day<=2)return '匿名弱提示候选：河西旧街附近有人见过一对中年夫妻从事故车辆旁互相搀扶离开，女方像医护人员，两人曾反复询问暮迟一中和安全路线，之后失去踪影。只可写成不确定的目击/寻人转述，不得点名身份。';
+  if(day<=5)return '匿名弱提示候选：槐安公寓附近的邻里频段有人提到一对中年夫妻短暂返家，反复问一个高三女孩有没有回过小区，之后似乎又在打听南桥方向的撤离消息。不要给门牌或确认身份。';
+  return '匿名弱提示候选：河西旧街一带曾收到很短的两人求救/敲击转述，像有一对中年幸存者被堵在临街仓房或后间附近；来源断续，具体门面无法确认。不要生成可导航坐标。';
+}
 function activeArcFor(k,w,profile,opts={}){
   if(!store.settings.storyArcs||opts.forceFresh||rng()>profile.continuation)return null;
   const arcs=(store.director?.arcs||[]).filter(a=>a.channel===k&&Number(a.expiresDay||0)>=Number(w.day||0));if(!arcs.length)return null;
@@ -287,10 +295,10 @@ function makeChannelPlan(k,w,route,opts={}){
       const fp=`${k}|${theme.id}|${area?.id||'-'}`;if(!avoid.includes(fp)&&(!exactFingerprintRecent(fp)||tries===4))break;
     }
   }
-  const hour=Number(String(w?.time||'12:00').split(':')[0]||12),night=hour>=21||hour<5,forms=(FORMS[k]||FORMS.muchi).filter(x=>x[0]!=='late_night'||night),form=pickTuple(forms,k,'formId'),stage=weighted(STAGES,x=>x[2]),rel=theme?.id==='mu_rumor'?weighted(RELIABILITY.filter(x=>x[0]==='rumor'||x[0]==='conflict'),x=>x[2]):weighted(RELIABILITY,x=>x[2]),mood=weighted(MOODS,x=>x[2]),rare=rarity(profile),human=pickHumanity(k,w);
+  const hour=Number(String(w?.time||'12:00').split(':')[0]||12),night=hour>=21||hour<5,forms=(FORMS[k]||FORMS.muchi).filter(x=>x[0]!=='late_night'||night),form=pickTuple(forms,k,'formId'),stage=weighted(STAGES,x=>x[2]),rel=theme?.id==='mu_rumor'?weighted(RELIABILITY.filter(x=>x[0]==='rumor'||x[0]==='conflict'),x=>x[2]):weighted(RELIABILITY,x=>x[2]),mood=weighted(MOODS,x=>x[2]),rare=rarity(profile),human=pickHumanity(k,w),parentHint=parentShadowHint(k,w,human);
   let secondary=null;if(rng()<profile.secondary){secondary=weighted((EVENT_POOLS[k]||[]).filter(x=>x.id!==theme?.id),x=>x.w*.8*repeatFactor(k,'themeId',x.id))}
   const fingerprint=`${k}|${theme?.id||'misc'}|${area?.id||'-'}`;
-  return{seed:token(),channel:k,themeId:theme?.id||'misc',themeLabel:theme?.label||'普通公共消息',mapEligible:!!theme?.map,arcEligible:!!theme?.arc,areaId:area?.id||'',areaName:area?.name||'',rarity:rare?.[0]||'common',rarityLabel:rare?.[1]||'普通',stageId:stage?.[0]||'new',stageLabel:stage?.[1]||'刚出现',reliabilityId:rel?.[0]||'partial',reliabilityLabel:rel?.[1]||'信息不完整但可信',moodId:mood?.[0]||'restrained',moodLabel:mood?.[1]||'克制实用',formId:form?.[0]||'bulletin',formLabel:form?.[1]||'广播',secondaryId:secondary?.id||'',secondaryLabel:secondary?.label||'',humanityId:human?.id||'',humanityLabel:human?.label||'',humanityGuide:human?.guide||'',continuation,arcId,continuationContext,fingerprint};
+  return{seed:token(),channel:k,themeId:theme?.id||'misc',themeLabel:theme?.label||'普通公共消息',mapEligible:!!theme?.map,arcEligible:!!theme?.arc,areaId:area?.id||'',areaName:area?.name||'',rarity:rare?.[0]||'common',rarityLabel:rare?.[1]||'普通',stageId:stage?.[0]||'new',stageLabel:stage?.[1]||'刚出现',reliabilityId:rel?.[0]||'partial',reliabilityLabel:rel?.[1]||'信息不完整但可信',moodId:mood?.[0]||'restrained',moodLabel:mood?.[1]||'克制实用',formId:form?.[0]||'bulletin',formLabel:form?.[1]||'广播',secondaryId:secondary?.id||'',secondaryLabel:secondary?.label||'',humanityId:human?.id||'',humanityLabel:human?.label||'',humanityGuide:human?.guide||'',parentHint,continuation,arcId,continuationContext,fingerprint};
 }
 function createDirectorPlan(keys,w,route,opts={}){return{mode:store.settings.diversity||'natural',variant:token(),byChannel:Object.fromEntries(keys.map(k=>[k,makeChannelPlan(k,w,route,opts)]))}}
 function directorBrief(plan){if(!plan?.byChannel)return'无额外导演简报。';return Object.values(plan.byChannel).map(p=>{
@@ -298,6 +306,7 @@ function directorBrief(plan){if(!plan?.byChannel)return'无额外导演简报。
   if(p.secondaryLabel)lines.push(`可选辅助信息=${p.secondaryLabel}（最多点到为止，不要抢主事件）`);
   if(p.continuation)lines.push(`连续事件：这是既有事件的后续，不要重新从头介绍。上次摘要=${p.continuationContext||'无'}`);
   if(p.humanityId)lines.push(`人味插播=${p.humanityLabel}。要求：${p.humanityGuide} 该插播只是生活/民间内容，不能作为地图数值变化的直接依据。`);else lines.push('人味插播=无；本条保持纯公共信息即可。');
+  if(p.parentHint)lines.push(`暗线弱提示候选=${p.parentHint}`);
   return lines.join('\n');
 }).join('\n\n')}
 function compactDirectorMeta(p){return p?{seed:p.seed,fingerprint:p.fingerprint,themeId:p.themeId,themeLabel:p.themeLabel,areaId:p.areaId,areaName:p.areaName,formId:p.formId,formLabel:p.formLabel,humanityId:p.humanityId,humanityLabel:p.humanityLabel,rarity:p.rarity,stageId:p.stageId,reliabilityId:p.reliabilityId,continuation:!!p.continuation,arcId:p.arcId||''}:null}
@@ -426,6 +435,7 @@ function basePrompt(keys,w,plan){return `当前世界时间：${stamp(w)}；灾�
 风格：${tone()} 人味/民间插播目标概率约${store.settings.civilian}%；多样性=${DIRECTOR_MODES[store.settings.diversity]?.label||'自然'}。
 摘要30-100字；听写正文90-320字；事件时间不得晚于当前世界时间。每个频道以1个主事件为核心，最多带0-2个短辅助段，不要把每条广播都写成大灾难或任务公告。导演简报里的“稀有”只表示不常见，不等于更严重、更宏大或更危险。
 若导演简报包含人味插播，正文可用【幸存者频段】【点歌留言】【短讯】等自然分段；summary仍需先概括主事件，并用一句短语带到插播，便于后续剧情知道有人听见了什么。
+若导演简报出现“暗线弱提示候选”，它只能作为普通匿名寻人/目击片段自然混入广播：不得说明其与玩家的真实关系，不得给出精确门牌或可导航坐标，不得让播音者表现为知道主角正在寻找谁，不得写入side_clue，也不得单独支撑map_intel。玩家是否联想到自己家人、是否前往调查完全由玩家决定。
 失散同伴线索默认target="无"；只有普通广播自然构成模糊冗余线索时才允许填写，绝不能直接确认最终藏身房间。
 需要生成的频道：\n${channelBlocks(keys,w)}
 隐藏创作导演简报（只决定本轮内容方向与形式，不是电台凭空掌握的事实；若与正文硬事实冲突，以硬事实为准）：\n${directorBrief(plan)}
