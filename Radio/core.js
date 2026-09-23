@@ -602,7 +602,7 @@ async function syncBroadcastAndClue(x,{allowClue=true}={},scope=captureScope()){
         const sec=r[label]||(r[label]={});sec.事件时间=x.eventTime;sec.来源=x.source;sec.摘要=x.summary;
       }
       if(allowClue&&store.settings.syncClues&&x.channel==='muchi'&&x.sideClue?.target!=='无'){
-        const q=d.支线?.[x.sideClue.target];if(q&&!q.位置已确认){const clues=Array.isArray(q.已获得线索)?q.已获得线索:[];if(!clues.includes(x.sideClue.name)){q.已获得线索=[...clues,x.sideClue.name];q.最近线索=x.sideClue.summary||x.sideClue.name;if(q.状态==='失联')q.状态='发现踪迹';if(x.sideClue.regionHint&&q.推测区域==='未知')q.推测区域=x.sideClue.regionHint;if(x.sideClue.strength==='强'&&q.已获得线索.length>=3&&q.状态==='发现踪迹')q.状态='锁定区域';clueApplied=`${x.sideClue.target}：${x.sideClue.name}`}}
+        const q=d.支线?.[x.sideClue.target];if(q&&!q.位置已确认){const clues=Array.isArray(q.已获得线索)?q.已获得线索:[];if(!clues.includes(x.sideClue.name)){q.已获得线索=[...clues,x.sideClue.name];q.最近线索=x.sideClue.name;if(q.状态==='失联')q.状态='发现踪迹';if(x.sideClue.regionHint&&q.推测区域==='未知')q.推测区域=x.sideClue.regionHint;if(x.sideClue.strength==='强'&&q.状态==='发现踪迹')q.状态='锁定区域';clueApplied=`${x.sideClue.target}：${x.sideClue.name}`}}
       }
       return v;
     });
