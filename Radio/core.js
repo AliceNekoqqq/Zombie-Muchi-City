@@ -597,12 +597,12 @@ async function applyMapIntel(payload,w,item){
       const discovered=prev.情报状态==='未知'&& !prev.资源已知 && !prev.尸群已知 && (prev.通行状态||'未知')==='未知';
       if(ch.resource.known){
         if(!prev.资源已知||discovered){next.资源已知=true;next.资源指数=clamp(ch.resource.estimate,0,100);next.资源趋势='未知'}
-        else{const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数||50)+dlt,0,100);next.资源趋势=ch.resource.trend}
-      }else if(prev.资源已知&&['上升','下降','稳定'].includes(ch.resource.trend)){const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数||50)+dlt,0,100);next.资源趋势=ch.resource.trend}
+        else{const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数??50)+dlt,0,100);next.资源趋势=ch.resource.trend}
+      }else if(prev.资源已知&&['上升','下降','稳定'].includes(ch.resource.trend)){const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数??50)+dlt,0,100);next.资源趋势=ch.resource.trend}
       if(ch.horde.known){
         if(!prev.尸群已知||discovered){next.尸群已知=true;next.尸群指数=clamp(ch.horde.estimate,0,100);next.尸群趋势='未知'}
-        else{const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数||50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
-      }else if(prev.尸群已知&&['上升','下降','稳定'].includes(ch.horde.trend)){const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数||50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
+        else{const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数??50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
+      }else if(prev.尸群已知&&['上升','下降','稳定'].includes(ch.horde.trend)){const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数??50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
       if(ch.passage!=='不变')next.通行状态=ch.passage;
       let tags=uniq(prev.动态标签);tags=tags.filter(t=>!ch.removeTags.includes(t));next.动态标签=uniq([...tags,...ch.addTags]).slice(0,8);
       next.情报状态=ch.reliability;next.情报摘要=ch.summary;next.情报来源=item.source||'暮迟市公共广播';next.置信度=ch.confidence;if(!Number(prev.首次发现日||0))next.首次发现日=w.day;next.最后更新日=w.day;next.最后更新时间=stamp(w);
