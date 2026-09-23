@@ -1,4 +1,4 @@
-import { initCore, prepareBeforeGeneration, markStoryMessage } from './core.js';
+import { initCore, prepareBeforeGeneration, markStoryMessage, onChatChanged } from './core.js';
 import { installUi, mountInline, refreshInlineSoon, openRadio, openSettings, clearForcedView } from './ui.js';
 
 function resolveTavernDocument(){
@@ -34,7 +34,7 @@ function isUserMessage(id){
         });
         if(tavern_events.MESSAGE_EDITED)eventOn(tavern_events.MESSAGE_EDITED,()=>refreshInlineSoon());
         if(tavern_events.MESSAGE_DELETED)eventOn(tavern_events.MESSAGE_DELETED,()=>refreshInlineSoon());
-        if(tavern_events.CHAT_CHANGED)eventOn(tavern_events.CHAT_CHANGED,()=>setTimeout(mountInline,220));
+        if(tavern_events.CHAT_CHANGED)eventOn(tavern_events.CHAT_CHANGED,()=>{onChatChanged();clearForcedView();setTimeout(mountInline,220)});
       }
     }catch(e){console.warn('[MR-87] event binding',e)}
 
@@ -50,4 +50,4 @@ function isUserMessage(id){
 })();
 
 export { openRadio, openSettings, mountInline };
-export const VERSION='1.11.0';
+export const VERSION='1.11.1';

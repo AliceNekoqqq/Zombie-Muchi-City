@@ -1,4 +1,4 @@
-export const VERSION='1.11.0';
+export const VERSION='1.11.1';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -7,6 +7,25 @@ export const channels={
 };
 
 const KEY='muchi_radio_v3';
+const CHAT_KEY='muchi_radio_chat_v1';
+let chatEpoch=0,loadedChat=null;
+function chatIdentity(){
+  try{const st=globalThis.SillyTavern,ctx=st?.getContext?.();return st?.getCurrentChatId?.()??ctx?.chatId??st?.chat??ctx?.chat??null}catch{return null}
+}
+function captureScope(){return{epoch:chatEpoch,chat:chatIdentity(),messageId:latestAssistantMessageId()}}
+function scopeCurrent(scope){return !!scope&&scope.epoch===chatEpoch&&scope.chat===chatIdentity()}
+function assertScope(scope){if(!scopeCurrent(scope))throw requestError('聊天已切换，本次广播已丢弃','MR87_CHAT_CHANGED')}
+function writeScope(scope,updater){
+  assertScope(scope);
+  if(scope.messageId!==latestAssistantMessageId())throw requestError('正文楼层已变化，请重新生成广播','MR87_TARGET_CHANGED');
+  return updateVariablesWith(v=>{assertScope(scope);return updater(v)},{type:'message',message_id:scope.messageId});
+}
+export function onChatChanged(){
+  chatEpoch++;cancelActiveGeneration();
+  try{uninjectPrompts?.(['muchi-radio-current'])}catch{}
+  load();render('all');
+}
+
 const defaults={
   settings:{
     mode:'none',proxyPreset:'',proxyModelOverride:false,proxyModel:'',apiUrl:'',apiKey:'',rememberKey:false,customModel:'',model:'',source:'openai',temperature:.85,settingsRevision:200,
@@ -73,6 +92,7 @@ export function deleteCustomApiPreset(name){
 export function hasGenerationSource(){
   const s=store.settings;if(s.mode==='main')return true;if(s.mode==='proxy')return !!String(s.proxyPreset||'').trim();if(s.mode==='custom')return !!String(s.apiUrl||'').trim()&&!!String(s.customModel||s.model||'').trim();return false;
 }
+function indexValue(value){if(value==null||value==='')return 50;const n=Number(value);return Number.isFinite(n)?n:50}
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
 const uniq=a=>[...new Set((Array.isArray(a)?a:[]).filter(Boolean).map(String))];
 export const isBusy=()=>busy;
@@ -131,10 +151,12 @@ export function cancelActiveGeneration(){
 export function load(){
   try{
     const root=getVariables?.({type:'script'})||{};
-    const v=root[KEY]||root.muchi_radio_v2||{};
+    const legacy=root[KEY]||root.muchi_radio_v2||{};
+    const v=getVariables?.({type:'chat'})?.[CHAT_KEY]||{};
+    loadedChat=chatIdentity();
     const localSettings=readLocal(LOCAL_SETTINGS_KEY,null);
-    const legacySettings=v.settings&&typeof v.settings==='object'?v.settings:null;
-    const sourceSettings=localSettings||legacySettings||{};
+    const legacySettings=legacy.settings&&typeof legacy.settings==='object'?legacy.settings:null;
+    const sourceSettings=localSettings||v.settings||legacySettings||{};
     store.settings={...defaults.settings,...sourceSettings};
     const legacyModel=String(sourceSettings?.model||'');
     if(!store.settings.customModel&&sourceSettings?.mode==='custom')store.settings.customModel=legacyModel;
@@ -162,6 +184,7 @@ export function load(){
 }
 
 export function save(){
+  if(loadedChat!==chatIdentity())return;
   try{
     const localSaved=persistSettingsLocal();
     const copy=structuredClone(store);
@@ -171,7 +194,7 @@ export function save(){
     else{copy.settings=structuredClone(store.settings);copy.settings.apiKey='';}
     copy.history=copy.history.slice(0,clamp(store.settings.historyLimit,10,200));
     copy.director={...(copy.director||{}),recent:(copy.director?.recent||[]).slice(0,30),arcs:(copy.director?.arcs||[]).slice(0,6)};
-    updateVariablesWith?.(v=>{v[KEY]=copy;return v},{type:'script'});
+    updateVariablesWith?.(v=>{v[CHAT_KEY]=copy;return v},{type:'chat'});
   }catch(e){console.warn('[MR-87] save',e)}
 }
 
@@ -339,13 +362,13 @@ function formatWeather(w){
 }
 
 function latestAssistantMessageId(){
-  try{const chat=globalThis.SillyTavern?.chat||[];for(let i=chat.length-1;i>=0;i--)if(chat[i]&&!chat[i].is_user)return i}catch{}
+  try{const chat=globalThis.SillyTavern?.chat||globalThis.SillyTavern?.getContext?.()?.chat||[];for(let i=chat.length-1;i>=0;i--)if(chat[i]&&!chat[i].is_user)return i}catch{}
   return -1;
 }
 
 function recentStoryContext(){
   try{
-    const chat=globalThis.SillyTavern?.chat||[];
+    const chat=globalThis.SillyTavern?.chat||globalThis.SillyTavern?.getContext?.()?.chat||[];
     const rows=[];
     for(let i=chat.length-1;i>=0&&rows.length<4;i--){
       const m=chat[i];if(!m)continue;
@@ -555,11 +578,11 @@ function generationRoute(keys,w,forced=''){
   if(c.status==='settled'||c.status==='exhausted'||Number(c.attempts||0)>=max)return'pure';
   return'settle';
 }
-async function restoreIntelSnapshot(snapshot){
-  updateVariablesWith?.(v=>{const d=v.stat_data||(v.stat_data={}),map=d.地图||(d.地图={});map.区域情报=deepClone(snapshot||{});return v},{type:'message',message_id:latestAssistantMessageId()});
+async function restoreIntelSnapshot(snapshot,scope=captureScope()){
+  await writeScope(scope,v=>{const d=v.stat_data||(v.stat_data={}),map=d.地图||(d.地图={});map.区域情报=deepClone(snapshot||{});return v});
 }
-async function restoreVisibleSnapshot(snapshot){
-  updateVariablesWith?.(v=>{const d=v.stat_data||(v.stat_data={}),map=d.地图||(d.地图={});map.区域情报=deepClone(snapshot?.intel||{});d.广播=deepClone(snapshot?.radio||{});return v},{type:'message',message_id:latestAssistantMessageId()});
+async function restoreVisibleSnapshot(snapshot,scope=captureScope()){
+  await writeScope(scope,v=>{const d=v.stat_data||(v.stat_data={}),map=d.地图||(d.地图={});map.区域情报=deepClone(snapshot?.intel||{});d.广播=deepClone(snapshot?.radio||{});return v});
 }
 
 function normalizeClue(raw,k){
@@ -568,11 +591,11 @@ function normalizeClue(raw,k){
   return{target:c.target,name:String(c.name||'广播中的模糊线索'),summary:String(c.summary||''),strength:['弱','中','强'].includes(c.strength)?c.strength:'弱',regionHint:String(c.region_hint||'')};
 }
 
-async function syncBroadcastAndClue(x,{allowClue=true}={}){
+async function syncBroadcastAndClue(x,{allowClue=true}={},scope=captureScope()){
   if(!store.settings.syncMvu&&!store.settings.syncClues)return x;
   let clueApplied='';
   try{
-    updateVariablesWith?.(v=>{
+    await writeScope(scope,v=>{
       const d=v.stat_data||(v.stat_data={});
       if(store.settings.syncMvu){
         const r=d.广播||(d.广播={}),label=channels[x.channel].label;r.当前频道=channels[store.state.channel]?.label||label;if(x.channel===store.state.channel)r.信号状态=x.signal;r.上次刷新时间=x.worldStamp;
@@ -582,27 +605,27 @@ async function syncBroadcastAndClue(x,{allowClue=true}={}){
         const q=d.支线?.[x.sideClue.target];if(q&&!q.位置已确认){const clues=Array.isArray(q.已获得线索)?q.已获得线索:[];if(!clues.includes(x.sideClue.name)){q.已获得线索=[...clues,x.sideClue.name];q.最近线索=x.sideClue.summary||x.sideClue.name;if(q.状态==='失联')q.状态='发现踪迹';if(x.sideClue.regionHint&&q.推测区域==='未知')q.推测区域=x.sideClue.regionHint;if(x.sideClue.strength==='强'&&q.已获得线索.length>=3&&q.状态==='发现踪迹')q.状态='锁定区域';clueApplied=`${x.sideClue.target}：${x.sideClue.name}`}}
       }
       return v;
-    },{type:'message',message_id:latestAssistantMessageId()});
-  }catch(e){console.warn('[MR-87] MVU broadcast sync',e)}
+    });
+  }catch(e){if(e?.code==='MR87_CHAT_CHANGED'||e?.code==='MR87_TARGET_CHANGED')throw e;console.warn('[MR-87] MVU broadcast sync',e)}
   x.appliedClue=clueApplied;return x;
 }
 
-async function applyMapIntel(payload,w,item){
+async function applyMapIntel(payload,w,item,scope=captureScope()){
   const p=normalizeMapIntel(payload,item?.intelRoute||'settle');if(!p.hasIntel){item.appliedImpact=[];return p}
   const summaries=[];
-  updateVariablesWith?.(v=>{
+  await writeScope(scope,v=>{
     const d=v.stat_data||(v.stat_data={}),map=d.地图||(d.地图={}),intel=map.区域情报||(map.区域情报={});
     for(const ch of p.changes){
       const name=ch.region.name,prev={...freshIntelState(),...(intel[name]||{})},next={...prev};
       const discovered=prev.情报状态==='未知'&& !prev.资源已知 && !prev.尸群已知 && (prev.通行状态||'未知')==='未知';
       if(ch.resource.known){
         if(!prev.资源已知||discovered){next.资源已知=true;next.资源指数=clamp(ch.resource.estimate,0,100);next.资源趋势='未知'}
-        else{const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数||50)+dlt,0,100);next.资源趋势=ch.resource.trend}
-      }else if(prev.资源已知&&['上升','下降','稳定'].includes(ch.resource.trend)){const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(Number(prev.资源指数||50)+dlt,0,100);next.资源趋势=ch.resource.trend}
+        else{const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(indexValue(prev.资源指数)+dlt,0,100);next.资源趋势=ch.resource.trend}
+      }else if(prev.资源已知&&['上升','下降','稳定'].includes(ch.resource.trend)){const dlt=deltaFor('resource',ch.resource.trend,ch.resource.strength);next.资源指数=clamp(indexValue(prev.资源指数)+dlt,0,100);next.资源趋势=ch.resource.trend}
       if(ch.horde.known){
         if(!prev.尸群已知||discovered){next.尸群已知=true;next.尸群指数=clamp(ch.horde.estimate,0,100);next.尸群趋势='未知'}
-        else{const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数||50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
-      }else if(prev.尸群已知&&['上升','下降','稳定'].includes(ch.horde.trend)){const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(Number(prev.尸群指数||50)+dlt,0,100);next.尸群趋势=ch.horde.trend}
+        else{const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(indexValue(prev.尸群指数)+dlt,0,100);next.尸群趋势=ch.horde.trend}
+      }else if(prev.尸群已知&&['上升','下降','稳定'].includes(ch.horde.trend)){const dlt=deltaFor('horde',ch.horde.trend,ch.horde.strength);next.尸群指数=clamp(indexValue(prev.尸群指数)+dlt,0,100);next.尸群趋势=ch.horde.trend}
       if(ch.passage!=='不变')next.通行状态=ch.passage;
       let tags=uniq(prev.动态标签);tags=tags.filter(t=>!ch.removeTags.includes(t));next.动态标签=uniq([...tags,...ch.addTags]).slice(0,8);
       next.情报状态=ch.reliability;next.情报摘要=ch.summary;next.情报来源=item.source||'暮迟市公共广播';next.置信度=ch.confidence;if(!Number(prev.首次发现日||0))next.首次发现日=w.day;next.最后更新日=w.day;next.最后更新时间=stamp(w);
@@ -611,7 +634,7 @@ async function applyMapIntel(payload,w,item){
     }
     if(store.settings.syncMvu){const r=d.广播||(d.广播={});r.最近事件=summaries.length?(p.reason||summaries.join('；')):(r.最近事件||'无')}
     return v;
-  },{type:'message',message_id:latestAssistantMessageId()});
+  });
   item.appliedImpact=summaries;item.mapIntel=p;return p;
 }
 
@@ -643,20 +666,22 @@ async function awaitModelResponse(cfg,{keys=[],reason='',route='pure'}={}){
   }
 }
 async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
-  const w=await world(),route=generationRoute(keys,w,forcedRoute),cycle=ensureIntelCycle(w);
+  const scope=captureScope(),w=await world();assertScope(scope);
+  const route=generationRoute(keys,w,forcedRoute),cycle=ensureIntelCycle(w);
   if(route==='settle'&&!cycle.baseline){cycle.baseline=intelSnapshotFromWorld(w);cycle.directorBaseline=deepClone(store.director);cycle.lastStamp=stamp(w);save()}
   const directorPlan=createDirectorPlan(keys,w,route,directorOptions);
   const cfg=config(keys,w,route,directorPlan);
   const envelope=parseEnvelope(await awaitModelResponse(cfg,{keys,reason,route}),keys,w,route);
+  assertScope(scope);
   const mapPayload=(route==='settle'||route==='reroll')?normalizeMapIntel(envelope.mapIntel,route):null;
   const items=envelope.broadcasts.map((raw,i)=>makeRecord(raw,keys[i],w,reason,i,route,directorPlan.byChannel[keys[i]]));
   const local=items.find(x=>x.channel==='muchi')||null;
   const visibleBefore=(route==='settle'||route==='reroll')?visibleSnapshotFromWorld(w):null;
   try{
-    for(const x of items)await syncBroadcastAndClue(x,{allowClue:route==='pure'});
+    for(const x of items)await syncBroadcastAndClue(x,{allowClue:route==='pure'},scope);
     if(local&&mapPayload){
       local.mapIntel=mapPayload;
-      if(mapPayload.hasIntel)await applyMapIntel(envelope.mapIntel,w,local);
+      if(mapPayload.hasIntel)await applyMapIntel(envelope.mapIntel,w,local,scope);
       if(route==='settle'){
         cycle.attempts=Number(cycle.attempts||0)+1;
         if(mapPayload.hasIntel){cycle.status='settled';cycle.broadcastId=local.id;cycle.regions=mapPayload.changes.map(c=>c.region.id);cycle.lastStamp=stamp(w)}
@@ -666,24 +691,26 @@ async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
       }
     }
   }catch(e){
-    if(visibleBefore)try{await restoreVisibleSnapshot(visibleBefore)}catch(_){}
+    if(visibleBefore&&scopeCurrent(scope))try{await restoreVisibleSnapshot(visibleBefore,scope)}catch(_){}
     throw e;
   }
+  assertScope(scope);
   commitDirector(items,directorPlan,w);
-  return{items,w,route,cycle,directorPlan};
+  return{items,w,route,cycle,directorPlan,scope};
 }
 
 export async function generate(input=store.state.channel,reason='manual'){
   const keys=normalizeChannelKeys(input),wantsArray=Array.isArray(input);if(!keys.length)return wantsArray?[]:null;if(busy)return wantsArray?[]:null;
   busy=true;render('busy',true);noise(.28);
   try{
-    const out=await runGeneration(keys,reason),items=out.items;
+    const out=await runGeneration(keys,reason),items=out.items;assertScope(out.scope);
     store.history=[...items,...store.history].slice(0,clamp(store.settings.historyLimit,10,200));
     if(reason==='manual'&&keys.length===1)store.state.channel=keys[0];
     store.state.lastStamp=items[0]?.worldStamp||stamp(out.w);store.state.lastLocation=out.w.location;setPendingRecords(items);save();render('all');
     if(reason==='manual')toastr?.success?.(items.length>1?`一次收到 ${items.length} 个频道的新广播`:`收到新的${channels[keys[0]].label}广播`);
     return wantsArray?items:(items[0]||null);
   }catch(e){
+    if(e?.code==='MR87_CHAT_CHANGED')return wantsArray?[]:null;
     if(e?.code==='MR87_API_UNSET'){console.info('[MR-87] generation source unset');render('error',e?.message||String(e));toastr?.warning?.('MR-87 尚未配置生成来源，请先打开设置');return wantsArray?[]:null}
     if(e?.code==='MR87_CANCELLED'){console.info('[MR-87] request cancelled');toastr?.info?.('已取消本次广播请求');return wantsArray?[]:null}
     if(e?.code==='MR87_TIMEOUT'){console.warn('[MR-87] request timeout',e);render('error',e?.message||String(e));toastr?.warning?.(e?.message||'广播请求超时');return wantsArray?[]:null}
@@ -696,22 +723,24 @@ export function getIntelUiState(){return deepClone(store.intel||defaults.intel)}
 export function canRerollToday(){return !!(store.settings.applyEvents&&store.intel?.status==='settled'&&store.intel?.baseline&&store.intel?.broadcastId)}
 export async function rerollTodayIntel(){
   if(busy)return null;busy=true;render('busy',true);noise(.25);
+  const scope=captureScope();
   const oldHistory=deepClone(store.history),oldIntel=deepClone(store.intel),oldDirector=deepClone(store.director);let currentSnapshot=null;
   try{
-    let w=await world(),cycle=ensureIntelCycle(w);if(cycle.status!=='settled'||!cycle.baseline||!cycle.broadcastId)throw Error('今天还没有可重Roll的地图情报');
+    let w=await world();assertScope(scope);let cycle=ensureIntelCycle(w);if(cycle.status!=='settled'||!cycle.baseline||!cycle.broadcastId)throw Error('今天还没有可重Roll的地图情报');
     currentSnapshot=visibleSnapshotFromWorld(w);const oldId=cycle.broadcastId,oldItem=store.history.find(x=>x.id===oldId);
-    await restoreIntelSnapshot(cycle.baseline);
+    await restoreIntelSnapshot(cycle.baseline,scope);assertScope(scope);
     store.history=store.history.filter(x=>x.id!==oldId);
     store.director=deepClone(cycle.directorBaseline||store.director||defaults.director);
-    w=await world();
-    const out=await runGeneration(['muchi'],'reroll','reroll',{forceFresh:true,avoidFingerprints:[oldItem?.director?.fingerprint].filter(Boolean)}),item=out.items[0];if(!item?.mapIntel?.hasIntel)throw Error('重Roll没有生成有效地图情报');
+    w=await world();assertScope(scope);
+    const out=await runGeneration(['muchi'],'reroll','reroll',{forceFresh:true,avoidFingerprints:[oldItem?.director?.fingerprint].filter(Boolean)}),item=out.items[0];assertScope(scope);if(!item?.mapIntel?.hasIntel)throw Error('重Roll没有生成有效地图情报');
     store.intel.rerolls=Number(oldIntel.rerolls||0)+1;
     store.history=[item,...store.history].slice(0,clamp(store.settings.historyLimit,10,200));
     if(store.state.displayBroadcastId===oldId)store.state.displayBroadcastId=item.id;
     setPendingRecords([item]);store.state.lastStamp=item.worldStamp;store.state.lastLocation=out.w.location;save();render('all');toastr?.success?.(`今日情报已重Roll · 第${store.intel.rerolls}次`);return item;
   }catch(e){
+    if(!scopeCurrent(scope))return null;
     if(e?.code==='MR87_CANCELLED')console.info('[MR-87 reroll] cancelled');else console.error('[MR-87 reroll]',e);
-    if(currentSnapshot)try{await restoreVisibleSnapshot(currentSnapshot)}catch(_){}store.history=oldHistory;store.intel=oldIntel;store.director=oldDirector;save();render('all');
+    if(currentSnapshot)try{await restoreVisibleSnapshot(currentSnapshot,scope)}catch(_){}store.history=oldHistory;store.intel=oldIntel;store.director=oldDirector;save();render('all');
     if(e?.code==='MR87_CANCELLED')toastr?.info?.('已取消重Roll，本次变化已回退');else if(e?.code==='MR87_TIMEOUT')toastr?.warning?.(e?.message||'重Roll请求超时，已回退');else toastr?.error?.(`重Roll失败：${e?.message||e}`);return null;
   }finally{busy=false;render('busy',false)}
 }
@@ -756,8 +785,9 @@ function injectStoryBroadcast(value){
 export async function prepareBeforeGeneration(){
   if(busy||!hasGenerationSource())return null;
   const pending=pendingRecords();if(pending.length){injectStoryBroadcast(pending);return pending.length===1?pending[0]:pending}
-  const w=await world(),plan=autoPlan(w);if(!plan.keys.length)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope))return null;const plan=autoPlan(w);if(!plan.keys.length)return null;
   const value=await generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`),items=(Array.isArray(value)?value:[value]).filter(Boolean);
+  if(!scopeCurrent(scope))return null;
   if(items.length)injectStoryBroadcast(items);return items.length===1?items[0]:items;
 }
 
@@ -774,7 +804,7 @@ export function displayForMessage(messageId){
 
 export async function autoRefresh(){
   if(!hasGenerationSource())return null;
-  const w=await world(),plan=autoPlan(w);if(!plan.keys.length||busy)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope))return null;const plan=autoPlan(w);if(!plan.keys.length||busy)return null;
   return generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`);
 }
 
@@ -791,7 +821,7 @@ export function noise(sec=.15){const a=audioCtx();if(!a)return;const n=Math.floo
 
 export async function initCore(){
   load();
-  const w=await world();
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope))return;
   if(!store.state.lastLocation)store.state.lastLocation=w.location;
   if(store.history.length&&!store.state.lastStamp)store.state.lastStamp=store.history[0]?.worldStamp||stamp(w);
   save();
