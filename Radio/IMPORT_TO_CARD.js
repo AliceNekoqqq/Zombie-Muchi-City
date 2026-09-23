@@ -1,8 +1,8 @@
 async function importMr87(){
   const urls=[
     'https://cdn.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.11.1/Radio/index.js?mr87=1111',
-    'https://testingcf.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@f6ad63bc6f123c464d5f0b00823854aa05492971/Radio/index.js?mr87=1111',
-    'https://fastly.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@f6ad63bc6f123c464d5f0b00823854aa05492971/Radio/index.js?mr87=1111'
+    'https://testingcf.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.11.1/Radio/index.js?mr87=1111',
+    'https://fastly.jsdelivr.net/gh/AliceNekoqqq/Zombie-Muchi-City@v1.11.1/Radio/index.js?mr87=1111'
   ];
   const errors=[];
   for(const url of urls){
