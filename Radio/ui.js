@@ -309,7 +309,7 @@ function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-h
     <main class="mrs-content">
       <div class="mrs-page active" data-s-page="general">
         <section class="mrs-card"><h3>内容导演 <i class="mrs-help" tabindex="0" data-tip="随机性由脚本先抽取事件类型、区域、稀有度、播报形式、可靠度、人味插播和连续事件，再交给模型写成广播；不是单纯提高温度。">?</i></h3><label>广播多样性<select name="diversity"><option value="steady">稳健 · 更多连续性，稀有事件很少</option><option value="natural">自然 · 推荐</option><option value="rich">丰富 · 更积极换事件与形式</option><option value="chaotic">混乱 · 更多传闻与非常规频段</option></select></label><label>人味插播概率 <em data-s-value="civilian">34%</em><input name="civilian" type="range" min="0" max="80"></label><label class="mrs-check"><input name="songRequests" type="checkbox">允许幸存者点歌 / 留言 <i class="mrs-help" tabindex="0" data-tip="点歌会随机出现歌名、歌手、点播对象和留言，也可能使用虚构歌曲；它属于生活内容，不会单独改变地图情报。">?</i></label><label class="mrs-check"><input name="storyArcs" type="checkbox">允许连续事件弧 <i class="mrs-help" tabindex="0" data-tip="部分广播会在未来1—3个游戏日继续发展，例如车队失联、供电恢复、寻宠后续；不会保证每次都续写。">?</i></label><label>整体紧张度<select name="tension"><option value="calm">生活化 / 克制</option><option value="balanced">平衡</option><option value="tense">偏紧张</option></select></label><label class="mrs-check"><input name="repeatGuard" type="checkbox">近期广播重复保护</label><label>附加偏好<textarea name="extra"></textarea></label></section>
-        <section class="mrs-card"><h3>记录与同步</h3><label>历史保留条数<input name="historyLimit" type="number" min="10" max="200"></label><label class="mrs-check"><input name="syncMvu" type="checkbox">最新摘要同步回 MVU</label><p>完整历史保存在脚本变量；MVU只保留三个频道的最新摘要与最近世界事件。</p></section>
+        <section class="mrs-card"><h3>记录与同步</h3><label>历史保留条数<input name="historyLimit" type="number" min="10" max="200"></label><label class="mrs-check"><input name="syncMvu" type="checkbox">最新摘要同步回 MVU</label><p>完整历史保存在当前聊天变量；MVU只保留三个频道的最新摘要与最近世界事件。</p></section>
       </div>
       <div class="mrs-page" data-s-page="engine">
         <section class="mrs-card mrs-full">
@@ -326,7 +326,7 @@ function settingsHtml(){return `<div id="${SETTINGS}" class="mrs-overlay" aria-h
       </div>
       <div class="mrs-page" data-s-page="auto"><section class="mrs-card mrs-full"><h3>自动接收 <i class="mrs-help" tabindex="0" data-tip="满足首次、跨日期、换地点或经过指定时间等条件时自动接收；同一轮需要多个频道会合并为一次 API 请求。">?</i></h3><label class="mrs-check"><input name="auto" type="checkbox">开启自动广播</label><label class="mrs-check"><input name="initialBroadcast" type="checkbox">首次生成前接收本地广播</label><label>世界时间至少经过（小时）<input name="hours" type="number" min="1" max="48"></label><label class="mrs-check"><input name="dateRefresh" type="checkbox">跨日期刷新</label><label class="mrs-check"><input name="locationRefresh" type="checkbox">换地点后优先刷新本地台</label><label>自动频道<select name="autoChannel"><option value="context">按情境选择</option><option value="current">只刷新当前频道</option><option value="rotate">三频道轮换</option></select></label></section></div>
       <div class="mrs-page" data-s-page="story"><section class="mrs-card mrs-full"><h3>剧情联动</h3><label class="mrs-check"><input name="injectStory" type="checkbox">广播先生成并注入本轮正文上下文 <i class="mrs-help" tabindex="0" data-tip="把刚收到的广播摘要一次性注入下一轮正文，使人物能自然听见；不会把整段广播反复塞进上下文。">?</i></label><label class="mrs-check"><input name="applyEvents" type="checkbox">暮迟市广播联动地图情报 <i class="mrs-help" tabindex="0" data-tip="地图显示的是玩家已知情报。每天最多自动结算一次，最多尝试两次；结算后普通广播只生成文本，除非主动重Roll。">?</i></label><label class="mrs-check"><input name="syncClues" type="checkbox">允许广播成为富余支线线索</label><p>广播不会直接确认同伴最终位置，也不会泄露楚泽暗线。地图情报与真实地点机制分层：重Roll只覆盖情报，不逆转正文里已经发生的搜刮、清剿等事实。</p></section></div>
-      <div class="mrs-page" data-s-page="display"><section class="mrs-card mrs-full"><h3>设备显示</h3><label class="mrs-check"><input name="sound" type="checkbox">按键与调频音效</label><label>静电强度 <em data-s-value="static">32%</em><input name="static" type="range" min="0" max="100"></label><label>设备缩放 <em data-s-value="scale">100%</em><input name="scale" type="range" min="80" max="120"></label><label class="mrs-check"><input name="inline" type="checkbox">在最新角色回复顶部显示广播</label><label class="mrs-check"><input name="showIdle" type="checkbox">没有新广播时也保留入口</label></section></div>
+      <div class="mrs-page" data-s-page="display"><section class="mrs-card mrs-full"><h3>设备显示</h3><label class="mrs-check"><input name="sound" type="checkbox">按键与调频音效</label><label>静电音效强度 <em data-s-value="static">32%</em><input name="static" type="range" min="0" max="100"></label><label>设备缩放（仅手机版） <em data-s-value="scale">100%</em><input name="scale" type="range" min="80" max="120"></label><label class="mrs-check"><input name="inline" type="checkbox">在最新角色回复顶部显示广播</label><label class="mrs-check"><input name="showIdle" type="checkbox">没有新广播时也保留入口</label></section></div>
     </main>
   </div>
   <div class="mrs-footer"><span class="mrs-footer-note">MR-87 · STILL LISTENING</span><div class="mrs-footer-actions"><button data-s-action="clear-history">清空广播历史</button><button class="mrs-primary" data-s-action="save">保存设置</button></div></div>
@@ -361,14 +361,20 @@ function focusGenerated(items,root){
   const rows=(Array.isArray(items)?items:[items]).filter(Boolean);if(!rows.length)return null;
   let x=rows.find(v=>v.channel===store.state.channel)||rows[0];
   if(x&&store.state.channel!==x.channel){store.state.channel=x.channel;save()}
-  forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x);return x;
+  forceShow=true;forceBroadcastId=x.id;root.dataset.broadcastId=x.id;root.classList.add('expanded');renderRadio(x);
+  root.classList.remove('mr87-new-transmission');void root.offsetWidth;root.classList.add('mr87-new-transmission');
+  setTimeout(()=>root.classList.remove('mr87-new-transmission'),1500);return x;
 }
 
 function renderRadio(preferred){
   const root=RDOC.getElementById(ROOT);if(!root)return;
   const item=preferred||itemForRoot(root);const c=channels[item?.channel||store.state.channel]||channels.muchi;
   // 频道与信号只影响设备外观；广播内容和地图情报沿用原有数据。
-  root.dataset.radioChannel=item?.channel||store.state.channel;
+  const visibleChannel=item?.channel||store.state.channel;
+  if(root.dataset.radioChannel!==visibleChannel){
+    root.dataset.radioChannel=visibleChannel;
+    try{RH.dispatchEvent(new RH.CustomEvent('muchi:radio-channel-changed',{detail:{channel:visibleChannel}}))}catch(_){ }
+  }
   root.dataset.signal=['强','一般','微弱','断续'].includes(item?.signal)?item.signal:'断续';
   root.dataset.broadcastId=item?.id||'';
   root.classList.toggle('is-off',!store.state.power);root.classList.toggle('is-muted',!!store.state.mute);root.classList.toggle('light-off',!store.state.light);root.classList.toggle('hold-on',!!store.state.hold);root.classList.toggle('is-busy',isBusy());root.style.setProperty('--mr87-scale',String(clamp(store.settings.scale,80,120)/100));
@@ -394,7 +400,7 @@ function renderRadio(preferred){
   root.querySelector('.mr87-expand').textContent=root.classList.contains('expanded')?'收起':'展开';renderLog();
 }
 
-function renderLog(){const root=RDOC.getElementById(ROOT);if(!root)return;const host=root.querySelector('.mr87-log-list');if(!host)return;host.innerHTML='';if(!store.history.length){host.innerHTML='<div class="mr87-empty">还没有广播记录。</div>';return}store.history.slice(0,12).forEach((x,i)=>{const c=channels[x.channel]||channels.muchi,b=RDOC.createElement('button');b.className='mr87-log-item';b.dataset.logIndex=String(i);b.innerHTML=`<span>${esc(c.band)} ${esc(c.freq)}</span><b>${esc(x.headline||x.category||'广播')}</b><small>${esc(x.eventTime)} · ${esc(x.source)}</small>`;host.appendChild(b)})}
+function renderLog(){const root=RDOC.getElementById(ROOT);if(!root)return;const host=root.querySelector('.mr87-log-list');if(!host)return;host.innerHTML='';if(!store.history.length){host.innerHTML='<div class="mr87-empty">还没有广播记录。</div>';return}store.history.forEach((x,i)=>{const c=channels[x.channel]||channels.muchi,b=RDOC.createElement('button');b.className='mr87-log-item';b.dataset.logIndex=String(i);b.innerHTML=`<span>${esc(c.band)} ${esc(c.freq)}</span><b>${esc(x.headline||x.category||'广播')}</b><small>${esc(x.eventTime)} · ${esc(x.source)}</small>`;host.appendChild(b)})}
 
 const API_DEFAULTS={
   openai:'https://api.openai.com/v1',
@@ -522,16 +528,18 @@ function renderSettings(){
   const url=r.querySelector('[name="apiUrl"]');if(url)url.dataset.autoUrl=Object.values(API_DEFAULTS).includes(String(url.value||''))?'1':'0';
   if(modelCache.length&&modelCacheUrl===String(s.apiUrl||''))renderModelPicker(r,modelCache);else renderModelPicker(r,[]);
   refreshCustomPresetOptions(r);applyModeUi(r,s.mode||'none');
-  const persist=r.querySelector('[data-custom-preset-status]'),info=settingsPersistenceInfo();if(persist&&!info.available){persist.textContent='当前浏览器环境不允许本地存储；设置只能维持到本次脚本会话。';persist.className='mrs-status mrs-wide warn'}
+  const persist=r.querySelector('[data-custom-preset-status]'),info=settingsPersistenceInfo();if(persist&&!info.available){persist.textContent='当前浏览器环境不允许本地存储；普通设置仅在当前聊天中保留，独立 API 预设无法保存。';persist.className='mrs-status mrs-wide warn'}
 }
 function readSettings(){
   const r=getSettingsOverlay()||ensureSettingsMount();if(!r)return;stashSamplingState(r);const v=n=>r.querySelector(`[name="${n}"]`)?.value??'',c=n=>!!r.querySelector(`[name="${n}"]`)?.checked;
+  const mode=selectedMode(r);
+  if(mode==='custom'&&!v('apiUrl').trim())throw Error('独立 API 需要填写 API URL');
+  if(mode==='custom'&&!v('customModel').trim())throw Error('独立 API 需要选择或填写模型');
+  if(mode==='proxy'&&!v('proxyPreset'))throw Error('代理预设模式需要选择一个代理预设');
+  if(mode==='proxy'&&c('proxyModelOverride')&&!v('proxyModel').trim())throw Error('已开启模型覆盖，请填写模型名');
   store.settings.mode=selectedMode(r);store.settings.proxyPreset=v('proxyPreset');store.settings.proxyModelOverride=c('proxyModelOverride');store.settings.proxyModel=v('proxyModel').trim();store.settings.apiUrl=v('apiUrl').trim();setApiKey(v('apiKey'));store.settings.rememberKey=c('rememberKey');store.settings.customModel=v('customModel').trim();store.settings.model=store.settings.mode==='custom'?store.settings.customModel:store.settings.proxyModel;store.settings.source=v('source')||'openai';
   store.settings.mainSampling=r.dataset.mainSampling||'inherit';store.settings.proxySampling=r.dataset.proxySampling||'inherit';store.settings.customSampling=r.dataset.customSampling||'custom';store.settings.temperature=clamp(v('temperature'),0,2);store.settings.settingsRevision=200;
   store.settings.auto=c('auto');store.settings.initialBroadcast=c('initialBroadcast');store.settings.hours=clamp(v('hours'),1,48);store.settings.dateRefresh=c('dateRefresh');store.settings.locationRefresh=c('locationRefresh');store.settings.autoChannel=v('autoChannel')||'context';store.settings.historyLimit=clamp(v('historyLimit'),10,200);store.settings.syncMvu=c('syncMvu');store.settings.injectStory=c('injectStory');store.settings.applyEvents=c('applyEvents');store.settings.syncClues=c('syncClues');store.settings.civilian=clamp(v('civilian'),0,80);store.settings.diversity=['steady','natural','rich','chaotic'].includes(v('diversity'))?v('diversity'):'natural';store.settings.songRequests=c('songRequests');store.settings.storyArcs=c('storyArcs');store.settings.tension=v('tension')||'balanced';store.settings.repeatGuard=c('repeatGuard');store.settings.extra=v('extra');store.settings.sound=c('sound');store.settings.static=clamp(v('static'),0,100);store.settings.scale=clamp(v('scale'),80,120);store.settings.inline=c('inline');store.settings.showIdle=c('showIdle');store.settings.apiKey=store.settings.rememberKey?getApiKey():'';
-  if(store.settings.mode==='custom'){if(!store.settings.apiUrl)throw Error('独立 API 需要填写 API URL');if(!store.settings.customModel)throw Error('独立 API 需要选择或填写模型')}
-  if(store.settings.mode==='proxy'&&!store.settings.proxyPreset)throw Error('代理预设模式需要选择一个代理预设');
-  if(store.settings.mode==='proxy'&&store.settings.proxyModelOverride&&!store.settings.proxyModel)throw Error('已开启模型覆盖，请填写模型名');
   save();renderSettings();mountInline();
 }
 

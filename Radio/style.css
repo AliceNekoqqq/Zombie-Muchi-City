@@ -320,6 +320,23 @@
 }
 
 /* v1.14.0 · three bands, one receiver */
+/* The receiver shares the brass / ink / paper vocabulary of the field kit. */
+.mr87-radio-shell{--field-brass:#cba87b;--field-ink:#122221}
+.mr87-control-deck{border-top:1px solid #cba87b66!important}
+.mr87-broadcast-card{isolation:isolate}
+.swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{content:'INCOMING  /  新广播';position:absolute;inset:0;z-index:9;display:grid;place-items:center;background:linear-gradient(135deg,#071714f2,#15342cde);color:#d9ebcf;font:600 17px Georgia,'Noto Serif SC',serif;letter-spacing:.17em;pointer-events:none;animation:mr87NewTransmission 1.45s ease-out forwards}
+@keyframes mr87NewTransmission{0%,34%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{display:none}}
+/* Desktop: keep the hardware and its control rows at their designed size. */
+@media (min-width:651px){
+  .swz-mr87-inline{width:650px!important;min-width:650px!important;max-width:650px!important;transform:none!important}
+  .swz-mr87-inline .mr87-radio-shell{width:590px!important;min-width:590px!important;max-width:590px!important}
+  .swz-mr87-inline .mr87-control-deck{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"device" "nav"!important;gap:10px!important}
+  .swz-mr87-inline .mr87-device-panel{grid-area:device;min-width:0}
+  .swz-mr87-inline .mr87-funcs{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important}
+  .swz-mr87-inline .mr87-nav-panel{grid-area:nav;grid-template-columns:54px minmax(0,1fr) 54px!important}
+  .swz-mr87-inline .mr87-shortcuts{display:none!important}
+}
 .swz-mr87-inline{--wave:#a9ebd1;--wave-soft:#254738;--wave-halo:#a9ebd139;--wave-warm:#edc188}
 .swz-mr87-inline[data-radio-channel="global"]{--wave:#c9dcef;--wave-soft:#283d4e;--wave-halo:#9fc9ed35;--wave-warm:#d9e4f0}
 .swz-mr87-inline[data-radio-channel="china"]{--wave:#f1c994;--wave-soft:#4d3829;--wave-halo:#efbb7e38;--wave-warm:#ffe0a9}

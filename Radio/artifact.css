@@ -1,0 +1,26 @@
+/* 暮迟随身档案 · shared field-kit treatment, intentionally scoped to plugin roots */
+.mc-monitor{--muchi-brass:#cba87b;--muchi-paper:#ded0b5;--muchi-ink:#172124}
+.mc-monitor .mc-card{border-color:rgba(203,168,123,.38)!important;box-shadow:inset 0 1px rgba(245,227,190,.09),0 10px 30px rgba(0,0,0,.19)!important}
+.mc-monitor .mc-card::before{pointer-events:none}
+.mc-monitor .mc-footer{border-top:1px solid rgba(203,168,123,.35)!important;letter-spacing:.12em}
+.mc-monitor .mc-footer::before{content:'FIELD RECORD  /  暮迟生存档案';display:block;color:#cba87b;font:600 10px/1.7 Georgia,'Noto Serif SC',serif;letter-spacing:.14em}
+.mc-monitor .mc-fill{box-shadow:0 0 13px rgba(162,214,194,.22)}
+#muchi-chuze-diary-reader-v15 .dz-shell{position:relative;box-shadow:0 35px 100px #000d,0 0 0 5px #211b16,0 0 0 6px #9b775255!important}
+#muchi-chuze-diary-reader-v15 .dz-paper-wrap{background:repeating-linear-gradient(90deg,transparent 0 30px,#785b3d13 31px 32px),radial-gradient(ellipse at 55% 0%,#d2b99224,transparent 70%),#15110e!important}
+#muchi-chuze-diary-reader-v15 .dz-paper{box-shadow:inset 0 0 25px #67442722,0 10px 30px #0006!important}
+#muchi-chuze-diary-reader-v15.dz-open .dz-shell{animation:muchiDiaryEnter .64s cubic-bezier(.2,.7,.15,1) both}
+#muchi-chuze-diary-reader-v15.dz-open .dz-shell::after{content:'ARCHIVE  /  黑色硬壳日记';position:absolute;top:50%;left:50%;z-index:100;max-width:90%;padding:19px 27px;border:1px solid #ccac7e;background:#171410ed;color:#e9d7b8;font:16px/1.4 Georgia,'Noto Serif SC',serif;letter-spacing:.15em;white-space:nowrap;pointer-events:none;transform:translate(-50%,-50%);animation:muchiDiaryTitle 1.65s ease-out forwards}
+@keyframes muchiDiaryEnter{from{opacity:0;transform:translateY(18px) rotate(-.5deg)}to{opacity:1;transform:none}}
+@keyframes muchiDiaryTitle{0%,45%{opacity:1}100%{opacity:0;visibility:hidden}}
+.mm-root{--muchi-map-paper:#d3c6a9;--muchi-map-brass:#a78050}
+.mm-root :is(.mm-panel,.mm-card,.mm-modal){box-shadow:0 12px 34px #0006,inset 0 1px #f1e5ca18}
+.mm-root :is(.mm-panel,.mm-card)::before{pointer-events:none}
+@media(prefers-reduced-motion:reduce){#muchi-chuze-diary-reader-v15.dz-open .dz-shell,#muchi-chuze-diary-reader-v15.dz-open .dz-shell::after{animation:none!important}#muchi-chuze-diary-reader-v15.dz-open .dz-shell::after{display:none}}
+
+/* The receiver shares the brass / ink / paper vocabulary of the field kit. */
+.mr87-radio-shell{--field-brass:#cba87b;--field-ink:#122221}
+.mr87-control-deck{border-top:1px solid #cba87b66!important}
+.mr87-broadcast-card{isolation:isolate}
+.swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{content:'INCOMING  /  新广播';position:absolute;inset:0;z-index:9;display:grid;place-items:center;background:linear-gradient(135deg,#071714f2,#15342cde);color:#d9ebcf;font:600 17px Georgia,'Noto Serif SC',serif;letter-spacing:.17em;pointer-events:none;animation:mr87NewTransmission 1.45s ease-out forwards}
+@keyframes mr87NewTransmission{0%,34%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{display:none}}

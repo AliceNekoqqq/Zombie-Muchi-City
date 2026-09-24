@@ -1,4 +1,4 @@
-export const VERSION='1.14.0';
+export const VERSION='1.15.0';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -748,7 +748,12 @@ export async function rerollTodayIntel(){
 function autoReasons(w){
   if(!store.settings.auto)return[];
   if(store.settings.initialBroadcast&&!store.history.length)return['initial'];
-  const prev=store.state.lastStamp;if(!prev)return['initial'];
+  const prev=store.state.lastStamp;
+  if(!prev){
+    if(store.settings.initialBroadcast)return['initial'];
+    // Begin the refresh clock at the first observed world time when the initial broadcast is disabled.
+    store.state.lastStamp=stamp(w);store.state.lastLocation=w.location;save();return[];
+  }
   const out=[];
   if(store.settings.dateRefresh&&prev.slice(0,10)!==stamp(w).slice(0,10))out.push('date');
   if(store.settings.locationRefresh&&store.state.lastLocation&&store.state.lastLocation!==w.location)out.push('location');
