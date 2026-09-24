@@ -162,55 +162,6 @@
   .mr87-control-deck{display:none!important}
 }
 
-/* v1.13.0 · afterlight receiver cabinet */
-.swz-mr87-inline{--brass:#d9aa73;--glass:#9be1d4;--body:#202526;--body-edge:#5a554b}
-.mr87-brief{border:1px solid rgba(225,184,131,.48)!important;border-radius:14px!important;background:#12191b!important;box-shadow:0 10px 35px #0008,inset 0 1px 0 #ffffff25,0 0 0 3px #11191c!important}
-.mr87-brief-bg{object-position:center 54%;opacity:.66!important;filter:saturate(.74) contrast(1.1)!important}
-.mr87-brief-shade{background:linear-gradient(90deg,#101719f2 0%,#101719df 48%,#10171988 100%)!important}
-.mr87-brief-mark{border-right-color:#d9aa7366}.mr87-brief-mark b{color:#f5e7d2;letter-spacing:.16em}
-.mr87-brief-channel{color:#ccebe4}.mr87-brief-headline{color:#fff7eb}
-.mr87-drawer{border:1px solid #bd916555!important;border-radius:22px!important;background:#12191b!important;box-shadow:0 30px 75px #000a,0 0 0 3px #171d1e!important}
-.mr87-scene-bg{object-position:center 42%;filter:saturate(.92) contrast(1.06) brightness(.83)!important}
-.mr87-scene-vignette{background:linear-gradient(180deg,#0d141789 0%,#0d141735 18%,#0d1417a8 49%,#0d1417d9 100%)!important}
-.mr87-topline{min-height:110px!important;align-items:flex-start;padding:22px 26px!important;background:linear-gradient(90deg,#0b1115c9,transparent 78%)!important;border-bottom:1px solid #e5ba7842!important;backdrop-filter:none!important}
-.mr87-brand>small{color:#f2c897;letter-spacing:.25em}.mr87-brand b{font-size:28px;color:#fff5e9;text-shadow:0 3px 12px #000c}.mr87-brand span{color:#d8d9d4}
-.mr87-status{padding:5px 7px 5px 12px;border:1px solid #e8c59854;border-radius:10px;background:#0d1518b8;backdrop-filter:blur(9px)}
-.mr87-workspace{padding:20px 22px 27px!important}
-.mr87-radio-shell{position:relative;width:min(875px,100%)!important;border:1px solid #756858!important;border-radius:19px!important;background:linear-gradient(145deg,#373a37,#1b2324 30%,#191f21 75%,#33342d)!important;box-shadow:0 24px 48px #000a,inset 0 1px 0 #ffffff47,inset 0 0 0 4px #0d121466!important}
-.mr87-radio-shell::before{content:"";position:absolute;inset:5px;border:1px solid #d2b3802b;border-radius:14px;pointer-events:none;z-index:3}
-.mr87-tuner-deck{position:relative;z-index:1;margin:12px 13px 0!important;padding:16px!important;border:1px solid #8d806e!important;border-radius:11px!important;background:linear-gradient(180deg,#535451,#333a3a 12%,#1b2426 80%,#262d2b)!important;box-shadow:inset 0 1px 0 #fff4,0 4px 12px #0008!important}
-.mr87-tuner-brand b{color:#f0d9b9;text-shadow:0 1px 0 #111}.mr87-tuner-brand small{color:#b1a18c}
-.mr87-tuner-window{min-height:78px;border:1px solid #9b865e;border-radius:6px;background:linear-gradient(180deg,#081514,#10211e 52%,#091613)!important;box-shadow:inset 0 4px 18px #000c,0 0 0 3px #141b1b,0 1px 0 #fff3!important}
-.mr87-tuner-window::before{content:"";position:absolute;inset:0;background:linear-gradient(130deg,#ffffff13,transparent 38%,#a7f0d00c 75%,transparent);pointer-events:none}
-.mr87-scale-labels{color:#c1bba6}.mr87-scale-labels span:nth-child(-n+3){color:#e8bb83}
-.mr87-scale-track{border-top-color:#95b9a8;background:repeating-linear-gradient(90deg,transparent 0 10px,#83a89b 10px 11px,transparent 11px 20px)}
-.mr87-scale-track i{background:#f6b97a;box-shadow:0 0 10px #f7b87c}.mr87-readout .mr87-freq{color:#c9f5df;text-shadow:0 0 13px #8de4bd88}
-.mr87-bars i.on{background:#b9e9ce;box-shadow:0 0 10px #a6e8c2aa}
-.mr87-main-deck{gap:13px;padding:13px!important}.mr87-speaker-side,.mr87-screen-side{gap:12px}
-.mr87-speaker-grille{border:1px solid #756852;background:repeating-radial-gradient(circle at 50% 48%,#2f3532 0 2px,#0c1113 2px 5px)!important;box-shadow:inset 0 0 50px #000e,0 1px 0 #fff3!important}
-.mr87-speaker-badge{border-color:#a7875e;background:#11191acc}.mr87-speaker-badge span{color:#e7b979}
-.mr87-channel-panel,.mr87-request-panel,.mr87-intel-card{border-color:#746651!important;background:linear-gradient(165deg,#2b3130,#151d1f)!important;box-shadow:inset 0 1px 0 #fff2,0 6px 14px #0006!important}
-.mr87-section-label{border-bottom-color:#c2a97b45}.mr87-section-label small{color:#c7b695}
-.mr87-presets button,.mr87-request-channels button{border-color:#746c5b!important;border-radius:7px!important;background:linear-gradient(180deg,#404644,#232c2d)!important;box-shadow:inset 0 1px 0 #ffffff36,0 3px 0 #0d1314,0 5px 7px #0008!important}
-.mr87-presets button:hover,.mr87-request-channels button:hover{border-color:#d6ad79!important;filter:brightness(1.15)}
-.mr87-presets button.active,.mr87-request-channels button.active{border-color:#b3d8c3!important;background:linear-gradient(180deg,#3c5d55,#213f3a)!important;box-shadow:inset 0 1px 0 #ffffff45,0 2px 0 #0d2422,0 0 15px #8de0bb30!important}
-.mr87-presets button.active b{color:#f0fff5}.mr87-presets button.active em{color:#d9bd88}
-.mr87-broadcast-card{border:1px solid #7f8060;border-radius:10px;background:radial-gradient(circle at 15% 0,#244439 0%,#10231e 45%,#091611 100%)!important;box-shadow:inset 0 0 25px #0008,inset 0 1px 0 #d9ffe02b,0 0 0 4px #111b1b,0 7px 18px #0009!important}
-.mr87-broadcast-card::before{background:repeating-linear-gradient(180deg,#b7e3c00a 0 1px,transparent 1px 4px),linear-gradient(130deg,#d6ffe412,transparent 45%)!important}
-.mr87-screen-caption{color:#b4d9bc;border-bottom-color:#98c5a15a}.mr87-screen-caption i{color:#f1bd89}
-.mr87-meta .mr87-time{color:#cbebc6}.mr87-headline{color:#f4ffe8;text-shadow:0 0 16px #addb9c2b}
-.mr87-transcript{color:#d5e8d2}.mr87-broadcast-signature{color:#92af97}
-.mr87-receive{border-color:#e3bf82!important;border-radius:7px!important;background:linear-gradient(180deg,#e9cf9c,#bb8957)!important;color:#241b15!important;box-shadow:inset 0 1px 0 #fff8,0 3px 0 #704b2f,0 6px 10px #0008!important}
-.mr87-intel-copy small{color:#bda77e}.mr87-reroll{border-color:#906467!important}
-.mr87-control-deck{border-color:#776957!important;background:linear-gradient(180deg,#323938,#1b2526)!important}
-.mr87-foot{color:#c5b49a;border-top-color:#c2a17145!important}
-@container mr87 (max-width:590px){
-  .mr87-topline{min-height:84px!important;padding:14px!important}.mr87-brand b{font-size:21px}
-  .mr87-workspace{padding:10px 7px 14px!important}.mr87-tuner-deck{margin:8px 8px 0!important;padding:8px!important}
-  .mr87-tuner-window{min-height:58px}.mr87-main-deck{padding:9px!important;gap:10px!important}
-  .mr87-brief-bg{object-position:center 58%}.mr87-scene-bg{object-position:54% center}
-}
-
 
 /* MR-87 v1.9.3 · backdrop reveal + intercepted survivor-band styling
    Large chassis layers become transparent/low-opacity; individual controls remain physical, opaque instruments. */
@@ -318,3 +269,73 @@
   .mr87-intel-card>.mr87-help{grid-column:2;grid-row:1}
   .mr87-intel-card>.mr87-reroll{grid-column:1/-1;width:100%}
 }
+
+/* v1.13.0 · afterlight receiver cabinet */
+.swz-mr87-inline{--brass:#d9aa73;--glass:#9be1d4;--body:#202526;--body-edge:#5a554b}
+.mr87-brief{border:1px solid rgba(225,184,131,.48)!important;border-radius:14px!important;background:#12191b!important;box-shadow:0 10px 35px #0008,inset 0 1px 0 #ffffff25,0 0 0 3px #11191c!important}
+.mr87-brief-bg{object-position:center 54%;opacity:.66!important;filter:saturate(.74) contrast(1.1)!important}
+.mr87-brief-shade{background:linear-gradient(90deg,#101719f2 0%,#101719df 48%,#10171988 100%)!important}
+.mr87-brief-mark{border-right-color:#d9aa7366}.mr87-brief-mark b{color:#f5e7d2;letter-spacing:.16em}
+.mr87-brief-channel{color:#ccebe4}.mr87-brief-headline{color:#fff7eb}
+.mr87-drawer{border:1px solid #bd916555!important;border-radius:22px!important;background:#12191b!important;box-shadow:0 30px 75px #000a,0 0 0 3px #171d1e!important}
+.mr87-scene-bg{object-position:center 42%;filter:saturate(.92) contrast(1.06) brightness(.83)!important}
+.mr87-scene-vignette{background:linear-gradient(180deg,#0d141789 0%,#0d141735 18%,#0d1417a8 49%,#0d1417d9 100%)!important}
+.mr87-topline{min-height:110px!important;align-items:flex-start;padding:22px 26px!important;background:linear-gradient(90deg,#0b1115c9,transparent 78%)!important;border-bottom:1px solid #e5ba7842!important;backdrop-filter:none!important}
+.mr87-brand>small{color:#f2c897;letter-spacing:.25em}.mr87-brand b{font-size:28px;color:#fff5e9;text-shadow:0 3px 12px #000c}.mr87-brand span{color:#d8d9d4}
+.mr87-status{padding:5px 7px 5px 12px;border:1px solid #e8c59854;border-radius:10px;background:#0d1518b8;backdrop-filter:blur(9px)}
+.mr87-workspace{padding:20px 22px 27px!important}
+.mr87-radio-shell{position:relative;width:min(875px,100%)!important;border:1px solid #756858!important;border-radius:19px!important;background:linear-gradient(145deg,#373a37,#1b2324 30%,#191f21 75%,#33342d)!important;box-shadow:0 24px 48px #000a,inset 0 1px 0 #ffffff47,inset 0 0 0 4px #0d121466!important}
+.mr87-radio-shell::before{content:"";position:absolute;inset:5px;border:1px solid #d2b3802b;border-radius:14px;pointer-events:none;z-index:3}
+.mr87-tuner-deck{position:relative;z-index:1;margin:12px 13px 0!important;padding:16px!important;border:1px solid #8d806e!important;border-radius:11px!important;background:linear-gradient(180deg,#535451,#333a3a 12%,#1b2426 80%,#262d2b)!important;box-shadow:inset 0 1px 0 #fff4,0 4px 12px #0008!important}
+.mr87-tuner-brand b{color:#f0d9b9;text-shadow:0 1px 0 #111}.mr87-tuner-brand small{color:#b1a18c}
+.mr87-tuner-window{min-height:78px;border:1px solid #9b865e;border-radius:6px;background:linear-gradient(180deg,#081514,#10211e 52%,#091613)!important;box-shadow:inset 0 4px 18px #000c,0 0 0 3px #141b1b,0 1px 0 #fff3!important}
+.mr87-tuner-window::before{content:"";position:absolute;inset:0;background:linear-gradient(130deg,#ffffff13,transparent 38%,#a7f0d00c 75%,transparent);pointer-events:none}
+.mr87-scale-labels{color:#c1bba6}.mr87-scale-labels span:nth-child(-n+3){color:#e8bb83}
+.mr87-scale-track{border-top-color:#95b9a8;background:repeating-linear-gradient(90deg,transparent 0 10px,#83a89b 10px 11px,transparent 11px 20px)}
+.mr87-scale-track i{background:#f6b97a;box-shadow:0 0 10px #f7b87c}.mr87-readout .mr87-freq{color:#c9f5df;text-shadow:0 0 13px #8de4bd88}
+.mr87-bars i.on{background:#b9e9ce;box-shadow:0 0 10px #a6e8c2aa}
+.mr87-main-deck{gap:13px;padding:13px!important}.mr87-speaker-side,.mr87-screen-side{gap:12px}
+.mr87-speaker-grille{border:1px solid #756852;background:repeating-radial-gradient(circle at 50% 48%,#2f3532 0 2px,#0c1113 2px 5px)!important;box-shadow:inset 0 0 50px #000e,0 1px 0 #fff3!important}
+.mr87-speaker-badge{border-color:#a7875e;background:#11191acc}.mr87-speaker-badge span{color:#e7b979}
+.mr87-channel-panel,.mr87-request-panel,.mr87-intel-card{border-color:#746651!important;background:linear-gradient(165deg,#2b3130,#151d1f)!important;box-shadow:inset 0 1px 0 #fff2,0 6px 14px #0006!important}
+.mr87-section-label{border-bottom-color:#c2a97b45}.mr87-section-label small{color:#c7b695}
+.mr87-presets button,.mr87-request-channels button{border-color:#746c5b!important;border-radius:7px!important;background:linear-gradient(180deg,#404644,#232c2d)!important;box-shadow:inset 0 1px 0 #ffffff36,0 3px 0 #0d1314,0 5px 7px #0008!important}
+.mr87-presets button:hover,.mr87-request-channels button:hover{border-color:#d6ad79!important;filter:brightness(1.15)}
+.mr87-presets button.active,.mr87-request-channels button.active{border-color:#b3d8c3!important;background:linear-gradient(180deg,#3c5d55,#213f3a)!important;box-shadow:inset 0 1px 0 #ffffff45,0 2px 0 #0d2422,0 0 15px #8de0bb30!important}
+.mr87-presets button.active b{color:#f0fff5}.mr87-presets button.active em{color:#d9bd88}
+.mr87-broadcast-card{border:1px solid #7f8060;border-radius:10px;background:radial-gradient(circle at 15% 0,#244439 0%,#10231e 45%,#091611 100%)!important;box-shadow:inset 0 0 25px #0008,inset 0 1px 0 #d9ffe02b,0 0 0 4px #111b1b,0 7px 18px #0009!important}
+.mr87-broadcast-card::before{background:repeating-linear-gradient(180deg,#b7e3c00a 0 1px,transparent 1px 4px),linear-gradient(130deg,#d6ffe412,transparent 45%)!important}
+.mr87-screen-caption{color:#b4d9bc;border-bottom-color:#98c5a15a}.mr87-screen-caption i{color:#f1bd89}
+.mr87-meta .mr87-time{color:#cbebc6}.mr87-headline{color:#f4ffe8;text-shadow:0 0 16px #addb9c2b}
+.mr87-transcript{color:#d5e8d2}.mr87-broadcast-signature{color:#92af97}
+.mr87-receive{border-color:#e3bf82!important;border-radius:7px!important;background:linear-gradient(180deg,#e9cf9c,#bb8957)!important;color:#241b15!important;box-shadow:inset 0 1px 0 #fff8,0 3px 0 #704b2f,0 6px 10px #0008!important}
+.mr87-intel-copy small{color:#bda77e}.mr87-reroll{border-color:#906467!important}
+.mr87-control-deck{border-color:#776957!important;background:linear-gradient(180deg,#323938,#1b2526)!important}
+.mr87-foot{color:#c5b49a;border-top-color:#c2a17145!important}
+@container mr87 (max-width:590px){
+  .mr87-topline{min-height:84px!important;padding:14px!important}.mr87-brand b{font-size:21px}
+  .mr87-workspace{padding:10px 7px 14px!important}.mr87-tuner-deck{margin:8px 8px 0!important;padding:8px!important}
+  .mr87-tuner-window{min-height:58px}.mr87-main-deck{padding:9px!important;gap:10px!important}
+  .mr87-brief-bg{object-position:center 58%}.mr87-scene-bg{object-position:54% center}
+}
+
+/* v1.14.0 · three bands, one receiver */
+.swz-mr87-inline{--wave:#a9ebd1;--wave-soft:#254738;--wave-halo:#a9ebd139;--wave-warm:#edc188}
+.swz-mr87-inline[data-radio-channel="global"]{--wave:#c9dcef;--wave-soft:#283d4e;--wave-halo:#9fc9ed35;--wave-warm:#d9e4f0}
+.swz-mr87-inline[data-radio-channel="china"]{--wave:#f1c994;--wave-soft:#4d3829;--wave-halo:#efbb7e38;--wave-warm:#ffe0a9}
+.swz-mr87-inline[data-radio-channel="muchi"]{--wave:#a9ebd1;--wave-soft:#254738;--wave-halo:#a9ebd139;--wave-warm:#edc188}
+.mr87-tuner-window{border-color:var(--wave-warm)!important;box-shadow:inset 0 4px 18px #000c,0 0 0 3px #141b1b,0 0 16px var(--wave-halo)!important;transition:border-color .35s,box-shadow .35s}
+.mr87-readout .mr87-freq{color:var(--wave)!important;text-shadow:0 0 14px var(--wave-halo)!important;transition:color .35s}
+.mr87-scale-track i{background:var(--wave-warm)!important;box-shadow:0 0 10px var(--wave-halo)!important}
+.mr87-bars i.on{background:var(--wave)!important;box-shadow:0 0 9px var(--wave-halo)!important}
+.mr87-brief-channel,.mr87-brief-signal{color:var(--wave)!important}
+.mr87-broadcast-card{background:radial-gradient(circle at 15% 0,var(--wave-soft),#10201f 48%,#091411 100%)!important;border-color:var(--wave-warm)!important;transition:background .35s,border-color .35s}
+.mr87-screen-caption,.mr87-meta .mr87-time{color:var(--wave)!important}
+.mr87-broadcast-signature i{background:linear-gradient(90deg,var(--wave),transparent)!important;opacity:.55}
+.mr87-presets button.active>i,.mr87-request-channels button.active i{background:var(--wave)!important;border-color:var(--wave)!important;box-shadow:0 0 9px var(--wave-halo)!important}
+.swz-mr87-inline[data-signal="微弱"] .mr87-tuner-window::after,.swz-mr87-inline[data-signal="断续"] .mr87-tuner-window::after{opacity:.8}
+.swz-mr87-inline[data-signal="微弱"] .mr87-broadcast-card::before,.swz-mr87-inline[data-signal="断续"] .mr87-broadcast-card::before{opacity:.72;background:repeating-linear-gradient(180deg,#dcf4e00d 0 1px,transparent 1px 3px),linear-gradient(130deg,#ffffff0a,transparent 45%)!important}
+.swz-mr87-inline[data-signal="断续"] .mr87-bars i.on{opacity:.65}
+.swz-mr87-inline.scanning .mr87-tuner-window{animation:mr87TuneGlow .52s ease-out}
+@keyframes mr87TuneGlow{0%{filter:brightness(1)}40%{filter:brightness(1.26)}100%{filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){.swz-mr87-inline.scanning .mr87-tuner-window{animation:none}.swz-mr87-inline .mr87-tuner-window,.swz-mr87-inline .mr87-readout .mr87-freq,.swz-mr87-inline .mr87-broadcast-card{transition:none}}

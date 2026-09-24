@@ -367,6 +367,9 @@ function focusGenerated(items,root){
 function renderRadio(preferred){
   const root=RDOC.getElementById(ROOT);if(!root)return;
   const item=preferred||itemForRoot(root);const c=channels[item?.channel||store.state.channel]||channels.muchi;
+  // 频道与信号只影响设备外观；广播内容和地图情报沿用原有数据。
+  root.dataset.radioChannel=item?.channel||store.state.channel;
+  root.dataset.signal=['强','一般','微弱','断续'].includes(item?.signal)?item.signal:'断续';
   root.dataset.broadcastId=item?.id||'';
   root.classList.toggle('is-off',!store.state.power);root.classList.toggle('is-muted',!!store.state.mute);root.classList.toggle('light-off',!store.state.light);root.classList.toggle('hold-on',!!store.state.hold);root.classList.toggle('is-busy',isBusy());root.style.setProperty('--mr87-scale',String(clamp(store.settings.scale,80,120)/100));
   root.querySelectorAll('.mr87-power-led').forEach(x=>x.classList.toggle('on',!!store.state.power));
