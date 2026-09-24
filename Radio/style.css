@@ -223,3 +223,49 @@
   .mr87-transcript{max-height:132px!important}
   .mr87-human-band{margin:9px 0 7px}
 }
+
+/* v1.12.0 · legible field receiver */
+.swz-mr87-inline{--teal:#a9d8cf;--amber:#dfb886;--ink:#f5f1e9;line-height:1.5}
+.mr87-brief{min-height:70px;padding:11px 15px;gap:14px;border-color:rgba(169,216,207,.32);background-color:#10191b!important}
+.mr87-brief-mark b{font-size:17px}.mr87-brief-channel{font-size:12px}.mr87-brief-freq{font-size:10px}
+.mr87-brief-headline{font-size:15px}.mr87-brief-summary{font-size:11px;color:#d2ccc1}
+.mr87-brief-signal,.mr87-brief-time{font-size:11px}.mr87-expand{min-height:40px!important;font-size:12px!important}
+.mr87-drawer{border-color:rgba(169,216,207,.28)!important}
+.mr87-topline{min-height:69px;background:linear-gradient(90deg,rgba(8,14,17,.90),rgba(8,14,17,.58))!important}
+.mr87-brand>small{font-size:9px}.mr87-brand b{font-size:21px}.mr87-brand span,.mr87-status{font-size:11px}
+.mr87-gear,.mr87-collapse-top{width:40px!important;height:40px!important;font-size:17px!important}
+.mr87-tuner-deck{grid-template-columns:138px minmax(0,1fr) 96px}
+.mr87-tuner-brand small,.mr87-tuner-signal small{font-size:9px}
+.mr87-scale-labels{font-size:9px}.mr87-readout .mr87-station,.mr87-readout .mr87-band{font-size:10px}
+.mr87-section-label,.mr87-section-label small,.mr87-screen-caption,.mr87-broadcast-signature{font-size:10px}
+.mr87-meta{font-size:11px}.mr87-headline{font-size:23px;line-height:1.45}
+.mr87-transcript{max-height:210px;font-size:13px;line-height:1.8;scrollbar-color:#668d88 transparent}
+.mr87-human-band-head>b{font-size:11px}.mr87-human-band-head>i{font-size:9px}
+.mr87-human-band-body{font-size:12px;line-height:1.75}
+.mr87-impact span{font-size:10px}
+.mr87-presets button{min-height:62px!important}.mr87-presets button b{font-size:13px!important}
+.mr87-presets button em,.mr87-presets button small{font-size:9px!important}
+.mr87-request-panel{padding:12px!important;gap:10px!important}
+.mr87-request-copy{font-size:12px}.mr87-request-channels button{min-height:42px!important;font-size:12px!important}
+.mr87-receive{min-height:44px!important;font-size:13px!important}
+.mr87-intel-card{padding:12px}.mr87-intel-copy small{font-size:9px}.mr87-intel-copy b{font-size:13px}
+.mr87-intel-copy span{font-size:11px}.mr87-reroll{min-height:38px!important;font-size:11px!important}
+.mr87-log-head b{font-size:14px}.mr87-log-head span{font-size:10px}
+.mr87-log-list button{min-height:42px!important;font-size:12px!important}.mr87-log-list button small{font-size:10px}
+.mr87-empty,.mr87-foot{font-size:10px}
+.swz-mr87-inline button:focus-visible{outline:2px solid var(--teal)!important;outline-offset:2px}
+@container mr87 (max-width:590px){
+  .mr87-tuner-deck{grid-template-columns:78px minmax(0,1fr) 40px}
+  .mr87-tuner-brand b{font-size:17px}.mr87-scale-labels{font-size:7px}
+  .mr87-brief{min-height:62px;gap:8px;padding:9px}.mr87-brief-mark b{font-size:13px}
+  .mr87-brief-headline{font-size:12px}.mr87-brief-summary{font-size:10px}
+  .mr87-expand{min-width:48px;padding:0 6px!important}
+  .mr87-topline{min-height:58px}.mr87-brand b{font-size:18px}
+  .mr87-broadcast-card{min-height:220px;padding:14px!important}
+  .mr87-headline{font-size:20px}.mr87-transcript{max-height:220px!important;font-size:12px!important}
+  .mr87-presets button{min-height:52px!important}.mr87-presets button b{font-size:12px!important}
+  .mr87-request-channels button{min-height:42px!important;font-size:11px!important}
+  .mr87-intel-card{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .mr87-intel-card>.mr87-help{grid-column:2;grid-row:1}
+  .mr87-intel-card>.mr87-reroll{grid-column:1/-1;width:100%}
+}

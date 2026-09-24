@@ -50,4 +50,4 @@ function isUserMessage(id){
 })();
 
 export { openRadio, openSettings, mountInline };
-export const VERSION='1.11.1';
+export const VERSION='1.12.0';
