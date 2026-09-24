@@ -336,6 +336,9 @@
   .swz-mr87-inline .mr87-funcs{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important}
   .swz-mr87-inline .mr87-nav-panel{grid-area:nav;grid-template-columns:54px minmax(0,1fr) 54px!important}
   .swz-mr87-inline .mr87-shortcuts{display:none!important}
+  .swz-mr87-inline .mr87-request-panel{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"copy" "channels" "receive"!important;gap:9px!important}
+  .swz-mr87-inline .mr87-request-channels{grid-template-columns:repeat(3,minmax(0,1fr))!important;min-width:0}
+  .swz-mr87-inline .mr87-receive{width:100%!important;min-width:0!important}
 }
 .swz-mr87-inline{--wave:#a9ebd1;--wave-soft:#254738;--wave-halo:#a9ebd139;--wave-warm:#edc188}
 .swz-mr87-inline[data-radio-channel="global"]{--wave:#c9dcef;--wave-soft:#283d4e;--wave-halo:#9fc9ed35;--wave-warm:#d9e4f0}

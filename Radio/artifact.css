@@ -24,3 +24,8 @@
 .swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{content:'INCOMING  /  新广播';position:absolute;inset:0;z-index:9;display:grid;place-items:center;background:linear-gradient(135deg,#071714f2,#15342cde);color:#d9ebcf;font:600 17px Georgia,'Noto Serif SC',serif;letter-spacing:.17em;pointer-events:none;animation:mr87NewTransmission 1.45s ease-out forwards}
 @keyframes mr87NewTransmission{0%,34%{opacity:1}100%{opacity:0;visibility:hidden}}
 @media(prefers-reduced-motion:reduce){.swz-mr87-inline.mr87-new-transmission .mr87-broadcast-card::after{display:none}}
+@media(min-width:651px){
+  .swz-mr87-inline .mr87-request-panel{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"copy" "channels" "receive"!important;gap:9px!important}
+  .swz-mr87-inline .mr87-request-channels{grid-template-columns:repeat(3,minmax(0,1fr))!important;min-width:0}
+  .swz-mr87-inline .mr87-receive{width:100%!important;min-width:0!important}
+}
