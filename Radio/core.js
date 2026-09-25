@@ -1,4 +1,4 @@
-export const VERSION='1.15.0';
+export const VERSION='1.15.1';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -406,12 +406,16 @@ export async function world(){
     return `${name}：${x.状态||'失联'}，已知线索${clues}条，推测区域${x.推测区域||'未知'}，位置确认${x.位置已确认?'是':'否'}`;
   }).join('；');
   return{
-    date:tm.date,time:tm.time,stamp:tm.full,day:Number(w.灾变日||1),location,area:AREA[location]||'暮迟市',
+    date:tm.date,time:tm.time,stamp:tm.full,period:String(w.剧情时期||''),day:Number(w.灾变日??1),location,area:AREA[location]||'暮迟市',
     crowd:Number(loc.尸群指数??25),resource:Number(loc.资源指数??50),passage:String(loc.通行状态||'谨慎通行'),
     weather:formatWeather(w.天气),cureStatus:String(w.解药?.状态||'研发中'),cureAt:String(w.解药?.研发完成时间||'2026-04-27 19:42'),
     cureLeft:`${Number(w.解药?.剩余天数??547)}天${Number(w.解药?.剩余小时??0)}小时`,signal:String(r.信号状态||'一般'),
     mapDigest:intelDigest(intel),questDigest,storyFacts:recentStoryContext(),intel:deepClone(intel),raw:d
   };
+}
+
+export function isCampusPeriod(){
+  try{const v=getAllVariables()||{};return (v.stat_data||v).世界?.剧情时期==='校园日常'}catch{return false}
 }
 
 const stamp=w=>w.stamp||`${w.date} ${w.time}`;
@@ -667,12 +671,14 @@ async function awaitModelResponse(cfg,{keys=[],reason='',route='pure'}={}){
 }
 async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
   const scope=captureScope(),w=await world();assertScope(scope);
+  if(w.period==='校园日常')return null;
   const route=generationRoute(keys,w,forcedRoute),cycle=ensureIntelCycle(w);
   if(route==='settle'&&!cycle.baseline){cycle.baseline=intelSnapshotFromWorld(w);cycle.directorBaseline=deepClone(store.director);cycle.lastStamp=stamp(w);save()}
   const directorPlan=createDirectorPlan(keys,w,route,directorOptions);
   const cfg=config(keys,w,route,directorPlan);
   const envelope=parseEnvelope(await awaitModelResponse(cfg,{keys,reason,route}),keys,w,route);
   assertScope(scope);
+  if(isCampusPeriod())return null;
   const mapPayload=(route==='settle'||route==='reroll')?normalizeMapIntel(envelope.mapIntel,route):null;
   const items=envelope.broadcasts.map((raw,i)=>makeRecord(raw,keys[i],w,reason,i,route,directorPlan.byChannel[keys[i]]));
   const local=items.find(x=>x.channel==='muchi')||null;
@@ -701,9 +707,10 @@ async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
 
 export async function generate(input=store.state.channel,reason='manual'){
   const keys=normalizeChannelKeys(input),wantsArray=Array.isArray(input);if(!keys.length)return wantsArray?[]:null;if(busy)return wantsArray?[]:null;
+  if(isCampusPeriod()){if(reason==='manual')toastr?.info?.('校园日常时期尚未接入 MR-87；进入灾变后即可使用');return wantsArray?[]:null}
   busy=true;render('busy',true);noise(.28);
   try{
-    const out=await runGeneration(keys,reason),items=out.items;assertScope(out.scope);
+    const out=await runGeneration(keys,reason);if(!out)return wantsArray?[]:null;const items=out.items;assertScope(out.scope);
     store.history=[...items,...store.history].slice(0,clamp(store.settings.historyLimit,10,200));
     if(reason==='manual'&&keys.length===1)store.state.channel=keys[0];
     store.state.lastStamp=items[0]?.worldStamp||stamp(out.w);store.state.lastLocation=out.w.location;setPendingRecords(items);save();render('all');
@@ -722,6 +729,7 @@ export async function generate(input=store.state.channel,reason='manual'){
 export function getIntelUiState(){return deepClone(store.intel||defaults.intel)}
 export function canRerollToday(){return !!(store.settings.applyEvents&&store.intel?.status==='settled'&&store.intel?.baseline&&store.intel?.broadcastId)}
 export async function rerollTodayIntel(){
+  if(isCampusPeriod())return null;
   if(busy)return null;busy=true;render('busy',true);noise(.25);
   const scope=captureScope();
   const oldHistory=deepClone(store.history),oldIntel=deepClone(store.intel),oldDirector=deepClone(store.director);let currentSnapshot=null;
@@ -788,15 +796,17 @@ function injectStoryBroadcast(value){
 }
 
 export async function prepareBeforeGeneration(){
+  if(isCampusPeriod())return null;
   if(busy||!hasGenerationSource())return null;
   const pending=pendingRecords();if(pending.length){injectStoryBroadcast(pending);return pending.length===1?pending[0]:pending}
-  const scope=captureScope(),w=await world();if(!scopeCurrent(scope))return null;const plan=autoPlan(w);if(!plan.keys.length)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period==='校园日常')return null;const plan=autoPlan(w);if(!plan.keys.length)return null;
   const value=await generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`),items=(Array.isArray(value)?value:[value]).filter(Boolean);
   if(!scopeCurrent(scope))return null;
   if(items.length)injectStoryBroadcast(items);return items.length===1?items[0]:items;
 }
 
 export function markStoryMessage(messageId){
+  if(isCampusPeriod())return null;
   const items=pendingRecords();if(!items.length)return null;
   const x=items.find(v=>v.channel===store.state.channel)||items[0];
   store.state.displayMessageId=String(messageId);store.state.displayBroadcastId=x.id;store.state.pendingStoryId='';store.state.pendingStoryIds=[];save();return x;
@@ -808,8 +818,9 @@ export function displayForMessage(messageId){
 }
 
 export async function autoRefresh(){
+  if(isCampusPeriod())return null;
   if(!hasGenerationSource())return null;
-  const scope=captureScope(),w=await world();if(!scopeCurrent(scope))return null;const plan=autoPlan(w);if(!plan.keys.length||busy)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period==='校园日常')return null;const plan=autoPlan(w);if(!plan.keys.length||busy)return null;
   return generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`);
 }
 

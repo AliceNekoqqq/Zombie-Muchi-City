@@ -1,4 +1,4 @@
-import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, canCancelGeneration, cancelActiveGeneration, getActiveRequest, getProxyPresets, fetchModelList, generationCapabilities, listCustomApiPresets, getCustomApiPreset, saveCustomApiPreset, deleteCustomApiPreset, settingsPersistenceInfo, hasGenerationSource } from './core.js';
+import { store, channels, latest, byId, displayForMessage, switchChannel, cycle, generate, rerollTodayIntel, canRerollToday, getIntelUiState, clearHistory, clickSound, noise, save, setApiKey, getApiKey, setRenderer, isBusy, canCancelGeneration, cancelActiveGeneration, getActiveRequest, getProxyPresets, fetchModelList, generationCapabilities, listCustomApiPresets, getCustomApiPreset, saveCustomApiPreset, deleteCustomApiPreset, settingsPersistenceInfo, hasGenerationSource, isCampusPeriod } from './core.js';
 
 const ROOT='swz-inline-radio';
 const SETTINGS='swz-radio-settings';
@@ -566,6 +566,7 @@ export function closeSettings(){cleanupLegacySettings()}
 
 export function mountInline(force=false){
   RDOC.querySelectorAll(`.${INLINE_CLASS}`).forEach(el=>el.remove());
+  if(isCampusPeriod())return;
   const mes=getLatestAssistantMessage(),host=getMessageContentHost(mes);if(!host)return;
   const messageId=getMessageId(mes),scheduled=displayForMessage(messageId),forced=forceBroadcastId?byId(forceBroadcastId):null;
   const item=forced||scheduled||(force||forceShow||store.settings.showIdle?latest(store.state.channel):null);
@@ -574,7 +575,7 @@ export function mountInline(force=false){
   host.insertAdjacentHTML('afterbegin',inlineHtml());const root=RDOC.getElementById(ROOT);if(!root)return;root.style.setProperty('--mr87-backdrop',`url("${radioBackdropUrl()}")`);bindInline(root);root.dataset.broadcastId=item?.id||'';if(force||forceShow)root.classList.add('expanded');renderRadio(item||undefined);
 }
 
-export function openRadio(){forceShow=true;forceBroadcastId=forceBroadcastId||latest(store.state.channel)?.id||'';mountInline(true);setTimeout(()=>RDOC.getElementById(ROOT)?.scrollIntoView({behavior:'smooth',block:'center'}),50)}
+export function openRadio(){if(isCampusPeriod()){try{RH.toastr?.info?.('校园日常时期尚未接入 MR-87；进入灾变后即可使用')}catch{}return}forceShow=true;forceBroadcastId=forceBroadcastId||latest(store.state.channel)?.id||'';mountInline(true);setTimeout(()=>RDOC.getElementById(ROOT)?.scrollIntoView({behavior:'smooth',block:'center'}),50)}
 
 function bindInline(root){
   root.addEventListener('click',async e=>{
