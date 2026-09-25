@@ -575,7 +575,7 @@ export function mountInline(force=false){
   host.insertAdjacentHTML('afterbegin',inlineHtml());const root=RDOC.getElementById(ROOT);if(!root)return;root.style.setProperty('--mr87-backdrop',`url("${radioBackdropUrl()}")`);bindInline(root);root.dataset.broadcastId=item?.id||'';if(force||forceShow)root.classList.add('expanded');renderRadio(item||undefined);
 }
 
-export function openRadio(){if(isCampusPeriod()){try{RH.toastr?.info?.('校园日常时期尚未接入 MR-87；进入灾变后即可使用')}catch{}return}forceShow=true;forceBroadcastId=forceBroadcastId||latest(store.state.channel)?.id||'';mountInline(true);setTimeout(()=>RDOC.getElementById(ROOT)?.scrollIntoView({behavior:'smooth',block:'center'}),50)}
+export function openRadio(){if(isCampusPeriod()){try{RH.toastr?.info?.('当前尚未进入灾变后，或剧情变量尚未就绪；MR-87 已停用')}catch{}return}forceShow=true;forceBroadcastId=forceBroadcastId||latest(store.state.channel)?.id||'';mountInline(true);setTimeout(()=>RDOC.getElementById(ROOT)?.scrollIntoView({behavior:'smooth',block:'center'}),50)}
 
 function bindInline(root){
   root.addEventListener('click',async e=>{

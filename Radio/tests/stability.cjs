@@ -2,7 +2,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const source=fs.readFileSync(path.join(__dirname,'../core.js'),'utf8').replace(/\bexport /g,'');
 function runtime(){
  let id='A',pending,started;
- const chats={A:{},B:{}},messages={A:{stat_data:{世界:{当前时间:'2025-01-01 10:00',灾变日:1},地图:{区域情报:{河西区:{资源已知:true,尸群已知:true,资源指数:0,尸群指数:0,情报状态:'已确认'}}}}},B:{stat_data:{世界:{当前时间:'2025-01-01 10:00',灾变日:1}}}};
+ const chats={A:{},B:{}},messages={A:{stat_data:{世界:{剧情时期:'灾变后',当前时间:'2025-01-01 10:00',灾变日:1},地图:{区域情报:{河西区:{资源已知:true,尸群已知:true,资源指数:0,尸群指数:0,情报状态:'已确认'}}}}},B:{stat_data:{世界:{剧情时期:'灾变后',当前时间:'2025-01-01 10:00',灾变日:1}}}};
  const ctx={console,structuredClone,setTimeout,clearTimeout,Date,Math,window:{},toastr:{},uninjectPrompts(){},waitGlobalInitialized:async()=>{},getAllVariables:()=>messages[id],getVariables:o=>o.type==='chat'?chats[id]:{},updateVariablesWith:(fn,o)=>{const target=o.type==='chat'?chats:messages;target[id]=fn(target[id]);return target[id]},SillyTavern:{chat:[{is_user:false}],getCurrentChatId:()=>id},generateRaw:()=>new Promise(r=>{pending=r;started?.()})};
  vm.createContext(ctx);vm.runInContext(source+'\nglobalThis.api={store,load,save,onChatChanged,generate,prepareBeforeGeneration,autoRefresh,markStoryMessage,isCampusPeriod,applyMapIntel,captureScope,writeScope,indexValue,rerollTodayIntel,autoReasons,config};',ctx);ctx.api.load();
  return{ctx,api:ctx.api,chats,messages,switch(to,event=true){id=to;if(event)ctx.api.onChatChanged()},waitStart:()=>new Promise(r=>started=r),respond:v=>pending(v)};
@@ -36,12 +36,21 @@ function runtime(){
  assert.equal(await campus.api.autoRefresh(),null);
  assert.equal(await campus.api.generate('muchi','manual'),null);
  assert.equal(campus.api.store.history.length,0);
- campus.messages.A.stat_data.世界.剧情时期='灾变后';
+ campus.messages.A.stat_data.世界.剧情时期='灾变后';campus.messages.A.stat_data.世界.灾变日=1;
  const campusStart=campus.waitStart(),campusJob=campus.api.generate('muchi','manual');await campusStart;
  campus.messages.A.stat_data.世界.剧情时期='校园日常';
  campus.respond(JSON.stringify({broadcasts:[{channel:'muchi',headline:'late signal',summary:'late signal'}]}));
  assert.equal(await campusJob,null,'a delayed response must not leak into campus time');
  assert.equal(campus.api.store.history.length,0);
  assert.equal(campus.messages.A.stat_data.广播,undefined);
+ const unready=runtime();unready.api.store.settings.mode='main';delete unready.messages.A.stat_data.世界.剧情时期;
+ assert.equal(unready.api.isCampusPeriod(),true,'uninitialized first-message variables must block the receiver');
+ assert.equal(await unready.api.prepareBeforeGeneration(),null);
+ assert.equal(await unready.api.generate('muchi','manual'),null);
+ assert.equal(unready.api.store.history.length,0);
+ const switched=runtime();switched.api.store.settings.mode='main';switched.ctx.getLastMessageId=()=>0;switched.ctx.SillyTavern.chat[0].swipe_id=5;
+ assert.equal(switched.api.isCampusPeriod(),true,'fifth greeting must win over a stale disaster snapshot');
+ assert.equal(await switched.api.prepareBeforeGeneration(),null);
+ assert.equal(await switched.api.generate('muchi','manual'),null);
  console.log('PASS radio: zero/invalid indices, chat storage, stale target, late response, first reception and API sampling');
 })().catch(e=>{console.error(e);process.exitCode=1});

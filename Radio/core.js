@@ -1,4 +1,4 @@
-export const VERSION='1.15.1';
+export const VERSION='1.15.2';
 
 export const channels={
   global:{label:'全球',short:'INTL',band:'SW',freq:'9.650',delay:'2至7天',scope:'全球感染、跨国交通通信、国际医疗、人道援助。不得出现暮迟市街区级即时信息。'},
@@ -414,9 +414,19 @@ export async function world(){
   };
 }
 
-export function isCampusPeriod(){
-  try{const v=getAllVariables()||{};return (v.stat_data||v).世界?.剧情时期==='校园日常'}catch{return false}
+export function isRadioAvailable(){
+  try{
+    // Switching to the fifth greeting can briefly leave the previous greeting's MVU snapshot in memory.
+    // Block that window by checking the selected opening while the chat still contains only its first message.
+    if(typeof getLastMessageId==='function'&&Number(getLastMessageId())===0){
+      const first=globalThis.SillyTavern?.chat?.[0]||(typeof getChatMessages==='function'?getChatMessages(0,{include_swipes:true})?.[0]:null);
+      if(Number(first?.swipe_id)===5)return false;
+    }
+    const v=getAllVariables()||{},w=(v.stat_data||v).世界||{};
+    return w.剧情时期==='灾变后'&&Number(w.灾变日)>0;
+  }catch{return false}
 }
+export function isCampusPeriod(){return !isRadioAvailable()}
 
 const stamp=w=>w.stamp||`${w.date} ${w.time}`;
 function hours(a,b){
@@ -671,7 +681,7 @@ async function awaitModelResponse(cfg,{keys=[],reason='',route='pure'}={}){
 }
 async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
   const scope=captureScope(),w=await world();assertScope(scope);
-  if(w.period==='校园日常')return null;
+  if(w.period!=='灾变后'||w.day<1||!isRadioAvailable())return null;
   const route=generationRoute(keys,w,forcedRoute),cycle=ensureIntelCycle(w);
   if(route==='settle'&&!cycle.baseline){cycle.baseline=intelSnapshotFromWorld(w);cycle.directorBaseline=deepClone(store.director);cycle.lastStamp=stamp(w);save()}
   const directorPlan=createDirectorPlan(keys,w,route,directorOptions);
@@ -707,7 +717,7 @@ async function runGeneration(keys,reason,forcedRoute='',directorOptions={}){
 
 export async function generate(input=store.state.channel,reason='manual'){
   const keys=normalizeChannelKeys(input),wantsArray=Array.isArray(input);if(!keys.length)return wantsArray?[]:null;if(busy)return wantsArray?[]:null;
-  if(isCampusPeriod()){if(reason==='manual')toastr?.info?.('校园日常时期尚未接入 MR-87；进入灾变后即可使用');return wantsArray?[]:null}
+  if(isCampusPeriod()){if(reason==='manual')toastr?.info?.('当前尚未进入灾变后，或剧情变量尚未就绪；MR-87 已停用');return wantsArray?[]:null}
   busy=true;render('busy',true);noise(.28);
   try{
     const out=await runGeneration(keys,reason);if(!out)return wantsArray?[]:null;const items=out.items;assertScope(out.scope);
@@ -799,7 +809,7 @@ export async function prepareBeforeGeneration(){
   if(isCampusPeriod())return null;
   if(busy||!hasGenerationSource())return null;
   const pending=pendingRecords();if(pending.length){injectStoryBroadcast(pending);return pending.length===1?pending[0]:pending}
-  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period==='校园日常')return null;const plan=autoPlan(w);if(!plan.keys.length)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period!=='灾变后'||w.day<1)return null;const plan=autoPlan(w);if(!plan.keys.length)return null;
   const value=await generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`),items=(Array.isArray(value)?value:[value]).filter(Boolean);
   if(!scopeCurrent(scope))return null;
   if(items.length)injectStoryBroadcast(items);return items.length===1?items[0]:items;
@@ -820,7 +830,7 @@ export function displayForMessage(messageId){
 export async function autoRefresh(){
   if(isCampusPeriod())return null;
   if(!hasGenerationSource())return null;
-  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period==='校园日常')return null;const plan=autoPlan(w);if(!plan.keys.length||busy)return null;
+  const scope=captureScope(),w=await world();if(!scopeCurrent(scope)||w.period!=='灾变后'||w.day<1)return null;const plan=autoPlan(w);if(!plan.keys.length||busy)return null;
   return generate(plan.keys.length===1?plan.keys[0]:plan.keys,`auto:${plan.reasons.join('+')}`);
 }
 
